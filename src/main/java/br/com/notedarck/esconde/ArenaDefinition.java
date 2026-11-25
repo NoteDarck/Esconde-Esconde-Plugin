@@ -22,9 +22,11 @@ public final class ArenaDefinition {
     public int preparationSeconds() { return Math.max(1, config.getInt(p("preparation-seconds"), 30)); }
     public int roundSeconds() { return Math.max(10, config.getInt(p("round-seconds"), 600)); }
     public int betweenRoundsSeconds() { return Math.max(1, config.getInt(p("between-rounds-seconds"), 8)); }
-    public boolean translocation() { return config.getBoolean(p("mechanics.translocation"), true); }
-    public boolean fireworks() { return config.getBoolean(p("mechanics.fireworks"), true); }
-    public boolean catchByDamage() { return config.getBoolean(p("mechanics.catch-by-damage"), true); }
+    public int hiderHits() { return Math.max(1, config.getInt(p("hider-hits"), 5)); }
+    public boolean translocation() { return config.getBoolean(p("mechanics.translocation"), false); }
+    public boolean fireworks() { return config.getBoolean(p("mechanics.fireworks"), false); }
+    public boolean catchByDamage() { return config.getBoolean(p("mechanics.catch-by-damage"), false); }
+    public boolean disableLocatorBar() { return config.getBoolean(p("mechanics.disable-locator-bar"), true); }
     public Location location(String name) { return read(p(name)); }
     public Location lobby() { return location("lobby"); }
     public Location hiderSpawn() { return location("hider-spawn"); }

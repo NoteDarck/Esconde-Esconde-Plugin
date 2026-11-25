@@ -12,10 +12,16 @@ arenas:
     preparation-seconds: 30
     round-seconds: 600
     between-rounds-seconds: 8
+    # Quantos golpes do procurador o escondedor suporta antes de ser capturado.
+    hider-hits: 5
     mechanics:
-      translocation: true
-      fireworks: true
-      catch-by-damage: true
+      # Desativadas por padrão: o escondedor recebe apenas o stick especial.
+      translocation: false
+      fireworks: false
+      # Quando false, a captura acontece depois de hider-hits golpes.
+      catch-by-damage: false
+      # Remove a barra moderna que revela a localização dos jogadores.
+      disable-locator-bar: true
     lobby: null
     hider-spawn: null
     hunter-spawn: null

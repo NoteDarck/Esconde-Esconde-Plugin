@@ -2,7 +2,7 @@
 
 Minigame de Esconde-Esconde para **Paper 26.2**, inspirado no formato clássico do TazerCraft: um ou mais procuradores são sorteados, os escondedores ganham tempo para encontrar um esconderijo, e cada captura transforma o jogador em procurador.
 
-A versão 1.2.1 mantém o scoreboard, equipamentos e captura do release anterior e adiciona partidas independentes em várias arenas, três rodadas, UI moderna, translocação configurável e auto-start.
+A versão 1.2.2 mantém o scoreboard, arenas, rodadas e auto-start, mas remove o rastreamento moderno de jogadores e desativa as habilidades extras por padrão. O combate agora usa armas especiais e vários golpes antes da captura.
 
 ## Requisitos
 
@@ -12,7 +12,7 @@ A versão 1.2.1 mantém o scoreboard, equipamentos e captura do release anterior
 
 ## Instalação
 
-Copie `release/Esconde-Esconde-1.2.1-paper-26.2.jar` para `plugins/` e inicie o servidor. A configuração fica em `plugins/Esconde-Esconde/config.yml`.
+Copie `release/Esconde-Esconde-1.2.2-paper-26.2.jar` para `plugins/` e inicie o servidor. A configuração fica em `plugins/Esconde-Esconde/config.yml`.
 
 ## Cadastrando uma arena
 
@@ -58,7 +58,7 @@ O comando `/esconde iniciar <arena>` continua disponível para administradores, 
 3. Em cada rodada acontece o `ROLE_SELECTION`; por padrão, um procurador é sorteado.
 4. Os escondedores recebem 30 segundos de preparação e os procuradores ficam cegos e presos ao spawn.
 5. Em `HUNTING`, os procuradores são liberados e têm dez minutos para encontrar os escondedores.
-6. Um escondedor atingido ou morto passa imediatamente para o time dos procuradores e recebe o equipamento vermelho.
+6. Cada escondedor suporta cinco golpes por padrão. Os primeiros golpes são bloqueados pelo plugin e mostram a resistência restante; somente o golpe final o transforma em procurador. A captura por dano instantâneo pode ser reativada na configuração.
 7. A partida tem três rodadas por padrão. O placar de rodadas é mostrado na scoreboard.
 8. Os escondedores vencem uma rodada se pelo menos um sobreviver ao tempo; os procuradores vencem se capturarem todos.
 9. Ao fim das rodadas, todos são restaurados ao inventário, gamemode e localização originais.
@@ -66,10 +66,11 @@ O comando `/esconde iniciar <arena>` continua disponível para administradores, 
 ## Mecânicas inspiradas no TazerCraft
 
 - Identificação visual: procuradores usam armadura de couro vermelha e escondedores usam armadura verde.
-- Procuradores recebem espada de ferro e bússola.
-- Escondedores recebem fogos de artifício para criar distrações.
-- Escondedores recebem uma translocação por rodada quando a mecânica está habilitada. O item teleporta para um ponto aleatório dentro de `pos1`/`pos2`.
-- Capturas exibem mensagem, título, fogo de artifício e atualizam contadores em tempo real.
+- Procuradores recebem uma vara de blaze com Repulsão II.
+- Escondedores recebem um stick com Repulsão X.
+- A barra moderna de localização (`locator_bar`) é desligada nos mundos do servidor, e a bússola não é mais entregue. O brilho dos jogadores também é removido.
+- Translocação e fogos de artifício ficam desativados por padrão.
+- Capturas exibem mensagem e atualizam contadores em tempo real.
 - BossBar mostra arena, fase e tempo restante.
 - ActionBar mostra tempo e quantidade de jogadores por time.
 - Títulos avisam sorteio, início, 30/10 segundos restantes, liberação e resultados.
@@ -104,13 +105,15 @@ arenas:
     preparation-seconds: 30
     round-seconds: 600
     between-rounds-seconds: 8
+    hider-hits: 5
     mechanics:
-      translocation: true
-      fireworks: true
-      catch-by-damage: true
+      translocation: false
+      fireworks: false
+      catch-by-damage: false
+      disable-locator-bar: true
 ```
 
-`hunters` define a quantidade de procuradores sorteados no início de cada rodada. `rounds` e `round-seconds` controlam a duração da partida. `enabled: false` impede novas entradas na arena.
+`hunters` define a quantidade de procuradores sorteados no início de cada rodada. `hider-hits` define quantos golpes o escondedor aguenta. `rounds` e `round-seconds` controlam a duração da partida. `enabled: false` impede novas entradas na arena. Com `catch-by-damage: false`, o padrão é a captura após os golpes configurados; as outras habilidades permanecem desligadas.
 
 ## LuckPerms
 
@@ -139,7 +142,7 @@ Para remover uma permissão:
 ## Solução de problemas
 
 - **Arena não aparece como pronta:** configure os quatro pontos obrigatórios: `lobby`, `hider`, `hunter` e `spectator`.
-- **Translocação não funciona:** configure `pos1` e `pos2`, habilite `mechanics.translocation` e verifique se a região está no mesmo mundo dos spawns.
+- **Translocação não funciona (quando você a habilitou):** configure `pos1` e `pos2`, habilite `mechanics.translocation` e verifique se a região está no mesmo mundo dos spawns.
 - **Jogador não consegue entrar:** confirme se ele não está em outra arena e se a partida ainda está em `WAITING`.
 - **O plugin não carrega:** Paper 26.2 requer Java 25 ou superior; confira com `java -version`.
 - **Configuração antiga:** a primeira inicialização migra a arena antiga para `arenas.principal` automaticamente.
