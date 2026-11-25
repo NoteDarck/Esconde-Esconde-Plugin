@@ -5,6 +5,9 @@ arenas:
     min-players: 2
     max-players: 16
     hunters: 1
+    auto-start:
+      enabled: true
+      countdown-seconds: 10
     rounds: 3
     preparation-seconds: 30
     round-seconds: 600

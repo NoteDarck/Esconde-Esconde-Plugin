@@ -2,7 +2,7 @@
 
 Minigame de Esconde-Esconde para **Paper 26.2**, inspirado no formato clássico do TazerCraft: um ou mais procuradores são sorteados, os escondedores ganham tempo para encontrar um esconderijo, e cada captura transforma o jogador em procurador.
 
-A versão 1.2.0 mantém o scoreboard, equipamentos e captura do release anterior e adiciona partidas independentes em várias arenas, três rodadas, UI moderna e a mecânica configurável de translocação.
+A versão 1.2.1 mantém o scoreboard, equipamentos e captura do release anterior e adiciona partidas independentes em várias arenas, três rodadas, UI moderna, translocação configurável e auto-start.
 
 ## Requisitos
 
@@ -12,7 +12,7 @@ A versão 1.2.0 mantém o scoreboard, equipamentos e captura do release anterior
 
 ## Instalação
 
-Copie `release/Esconde-Esconde-1.2.0-paper-26.2.jar` para `plugins/` e inicie o servidor. A configuração fica em `plugins/Esconde-Esconde/config.yml`.
+Copie `release/Esconde-Esconde-1.2.1-paper-26.2.jar` para `plugins/` e inicie o servidor. A configuração fica em `plugins/Esconde-Esconde/config.yml`.
 
 ## Cadastrando uma arena
 
@@ -38,6 +38,18 @@ Confira uma arena com:
 ```
 
 As arenas são persistidas no arquivo `config.yml`, podem ser editadas individualmente e funcionam simultaneamente sem misturar jogadores, timers ou placares.
+
+### Início automático
+
+Por padrão, a arena inicia sozinha quando atinge `min-players`. O countdown padrão é de 10 segundos. Se um novo jogador entrar durante essa contagem, ela volta para 10 segundos. Se alguém sair e a arena ficar abaixo do mínimo, a contagem é cancelada.
+
+```yaml
+auto-start:
+  enabled: true
+  countdown-seconds: 10
+```
+
+O comando `/esconde iniciar <arena>` continua disponível para administradores, usando a mesma contagem configurada.
 
 ## Fluxo da partida
 
@@ -99,6 +111,30 @@ arenas:
 ```
 
 `hunters` define a quantidade de procuradores sorteados no início de cada rodada. `rounds` e `round-seconds` controlam a duração da partida. `enabled: false` impede novas entradas na arena.
+
+## LuckPerms
+
+O plugin já declara as permissões no `plugin.yml`. Para liberar participação para todos e administração para um grupo `staff`:
+
+```text
+/lp group default permission set esconde.player true
+/lp group default permission set esconde.join true
+/lp group staff permission set esconde.admin true
+```
+
+`esconde.admin` herda automaticamente `esconde.admin.maps`, `esconde.admin.start` e `esconde.admin.stop`. Se preferir separar as permissões administrativas:
+
+```text
+/lp group staff permission set esconde.admin.maps true
+/lp group staff permission set esconde.admin.start true
+/lp group staff permission set esconde.admin.stop true
+```
+
+Para remover uma permissão:
+
+```text
+/lp group default permission unset esconde.join
+```
 
 ## Solução de problemas
 

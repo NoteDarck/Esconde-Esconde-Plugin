@@ -16,6 +16,8 @@ public final class ArenaDefinition {
     public int minPlayers() { return config.getInt(p("min-players"), 2); }
     public int maxPlayers() { return config.getInt(p("max-players"), 16); }
     public int hunters() { return config.getInt(p("hunters"), 1); }
+    public boolean autoStart() { return config.getBoolean(p("auto-start.enabled"), true); }
+    public int autoStartSeconds() { return Math.max(1, config.getInt(p("auto-start.countdown-seconds"), 10)); }
     public int rounds() { return Math.max(1, config.getInt(p("rounds"), 3)); }
     public int preparationSeconds() { return Math.max(1, config.getInt(p("preparation-seconds"), 30)); }
     public int roundSeconds() { return Math.max(10, config.getInt(p("round-seconds"), 600)); }
