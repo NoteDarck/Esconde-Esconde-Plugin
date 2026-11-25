@@ -1,30 +1,43 @@
-arena:
-  name: principal
-  min-players: 2
-  max-players: 16
-  min-hunters: 1
-  hide-time-seconds: 30
-  game-time-seconds: 300
-  end-time-seconds: 8
-  # Use /esconde set <ponto> para preencher estes locais.
-  lobby: null
-  hider-spawn: null
-  hunter-spawn: null
-  spectator-spawn: null
+# Configuração geral; as arenas ficam neste mesmo arquivo para facilitar backup e edição.
+arenas:
+  principal:
+    enabled: true
+    min-players: 2
+    max-players: 16
+    hunters: 1
+    rounds: 3
+    preparation-seconds: 30
+    round-seconds: 600
+    between-rounds-seconds: 8
+    mechanics:
+      translocation: true
+      fireworks: true
+      catch-by-damage: true
+    lobby: null
+    hider-spawn: null
+    hunter-spawn: null
+    spectator-spawn: null
+    pos1: null
+    pos2: null
 settings:
-  hunter-catches-by-damage: true
-  give-hiders-leather-armor: true
   clear-inventory-on-join: true
   restore-players-after-game: true
 messages:
   prefix: '&8[&6Esconde&8] &r'
   no-permission: '&cVocê não tem permissão para isso.'
-  no-arena: '&cA arena ainda não foi configurada. Use /esconde set.'
-  not-enough: '&cSão necessários pelo menos %min% jogadores.'
-  joined: '&aVocê entrou na fila. Jogadores: &f%players%'
-  left: '&eVocê saiu da fila.'
-  started: '&aPartida iniciada! Os pegadores serão liberados em &f%time%s&a.'
-  hiders-win: '&aOs escondidos venceram! O tempo acabou.'
-  hunters-win: '&cOs pegadores venceram! Todos foram encontrados.'
-  caught: '&c%player% foi encontrado e virou pegador!'
-  stopped: '&eA partida foi encerrada por um administrador.'
+  no-arena: '&cArena inexistente, desativada ou ainda não configurada.'
+  joined: '&aVocê entrou na arena &f%arena%&a. Jogadores: &f%players%'
+  left: '&eVocê saiu da arena &f%arena%&e.'
+  starting: '&eA arena &f%arena% &einicia em &f%time%s&e.'
+  role-hunter: '&cVocê é o PROCURADOR!&f Encontre todos.'
+  role-hider: '&aVocê é o ESCONDEDOR!&f Esconda-se.'
+  released: '&cOs procuradores foram liberados!'
+  caught: '&c%player% foi encontrado e virou procurador!'
+  hiders-win: '&aRodada %round%: os escondedores venceram!'
+  hunters-win: '&cRodada %round%: os procuradores venceram!'
+  next-round: '&ePróxima rodada em &f%time%s&e.'
+  game-win-hiders: '&aPartida encerrada: os escondedores venceram mais rodadas.'
+  game-win-hunters: '&cPartida encerrada: os procuradores venceram mais rodadas.'
+  stopped: '&eA partida da arena &f%arena% &efoi encerrada.'
+  created: '&aArena &f%arena% &acriada.'
+  removed: '&aArena &f%arena% &aremovida.'

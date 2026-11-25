@@ -1,15 +1,30 @@
 name: Esconde-Esconde
-version: 1.1.0
+version: 1.2.0
 main: br.com.notedarck.esconde.EscondeEscondePlugin
 api-version: '26.2'
 author: NoteDarck
-description: Minigame de esconde-esconde inspirado em servidores de minigames.
+description: Minigame de esconde-esconde com arenas múltiplas e rodadas.
 commands:
   esconde:
     description: Controla o minigame de esconde-esconde.
     aliases: [hide, escondeesconde]
-    usage: /esconde <entrar|sair|iniciar|parar|set|status|reload>
+    usage: /esconde <entrar|sair|arena|iniciar|parar|status|ajuda|reload>
 permissions:
+  esconde.player:
+    description: Permite participar das partidas.
+    default: true
+  esconde.join:
+    description: Permite entrar em arenas.
+    default: true
   esconde.admin:
-    description: Permite configurar e controlar partidas.
+    description: Permissão geral de administração.
+    default: op
+  esconde.admin.maps:
+    description: Permite criar, remover e configurar arenas.
+    default: op
+  esconde.admin.start:
+    description: Permite iniciar partidas.
+    default: op
+  esconde.admin.stop:
+    description: Permite parar partidas.
     default: op
