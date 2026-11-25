@@ -1,0 +1,30 @@
+arena:
+  name: principal
+  min-players: 2
+  max-players: 16
+  min-hunters: 1
+  hide-time-seconds: 30
+  game-time-seconds: 300
+  end-time-seconds: 8
+  # Use /esconde set <ponto> para preencher estes locais.
+  lobby: null
+  hider-spawn: null
+  hunter-spawn: null
+  spectator-spawn: null
+settings:
+  hunter-catches-by-damage: true
+  give-hiders-leather-armor: true
+  clear-inventory-on-join: true
+  restore-players-after-game: true
+messages:
+  prefix: '&8[&6Esconde&8] &r'
+  no-permission: '&cVocê não tem permissão para isso.'
+  no-arena: '&cA arena ainda não foi configurada. Use /esconde set.'
+  not-enough: '&cSão necessários pelo menos %min% jogadores.'
+  joined: '&aVocê entrou na fila. Jogadores: &f%players%'
+  left: '&eVocê saiu da fila.'
+  started: '&aPartida iniciada! Os pegadores serão liberados em &f%time%s&a.'
+  hiders-win: '&aOs escondidos venceram! O tempo acabou.'
+  hunters-win: '&cOs pegadores venceram! Todos foram encontrados.'
+  caught: '&c%player% foi encontrado e virou pegador!'
+  stopped: '&eA partida foi encerrada por um administrador.'
