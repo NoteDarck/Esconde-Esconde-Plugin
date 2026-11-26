@@ -8,7 +8,7 @@ public final class GameManager {
     private final Map<String, ArenaGame> games = new LinkedHashMap<>();
     private final Map<UUID, String> membership = new HashMap<>();
     GameManager(EscondeEscondePlugin plugin) { this.plugin = plugin; reload(); }
-    public void reload() { games.clear(); for (ArenaDefinition a : plugin.arenas().all()) games.put(a.id().toLowerCase(Locale.ROOT), new ArenaGame(plugin, a)); }
+    public void reload() { membership.clear(); games.clear(); for (ArenaDefinition a : plugin.arenas().all()) games.put(a.id().toLowerCase(Locale.ROOT), new ArenaGame(plugin, a)); }
     public void syncArenas() { for (ArenaDefinition a : plugin.arenas().all()) games.putIfAbsent(a.id().toLowerCase(Locale.ROOT), new ArenaGame(plugin, a)); games.entrySet().removeIf(e -> plugin.arenas().get(e.getKey()) == null && !e.getValue().active()); }
     public ArenaGame game(String id) { return id == null ? null : games.get(id.toLowerCase(Locale.ROOT)); }
     public Collection<ArenaGame> all() { return Collections.unmodifiableCollection(games.values()); }

@@ -2,7 +2,7 @@
 
 Minigame de Esconde-Esconde para **Paper 26.2**, inspirado no formato clássico do TazerCraft: um ou mais procuradores são sorteados, os escondedores ganham tempo para encontrar um esconderijo, e cada captura transforma o jogador em procurador.
 
-A versão 1.2.3 mantém o scoreboard, arenas, rodadas e auto-start, mas remove o rastreamento moderno de jogadores e desativa as habilidades extras por padrão. O combate agora usa armas especiais e vários golpes antes da captura.
+A versão 1.2.4 mantém o scoreboard, arenas, rodadas e auto-start, mas remove o rastreamento moderno de jogadores e desativa as habilidades extras por padrão. O combate agora usa armas especiais e vários golpes antes da captura.
 
 ## Requisitos
 
@@ -12,7 +12,7 @@ A versão 1.2.3 mantém o scoreboard, arenas, rodadas e auto-start, mas remove o
 
 ## Instalação
 
-Copie `release/Esconde-Esconde-1.2.3-paper-26.2.jar` para `plugins/` e inicie o servidor. A configuração fica em `plugins/Esconde-Esconde/config.yml`.
+Copie `release/Esconde-Esconde-1.2.4-paper-26.2.jar` para `plugins/` e inicie o servidor. A configuração fica em `plugins/Esconde-Esconde/config.yml`.
 
 ## Cadastrando uma arena
 
@@ -72,6 +72,7 @@ O comando `/esconde iniciar <arena>` continua disponível para administradores, 
 - Procuradores recebem uma vara de blaze com Repulsão II.
 - Escondedores recebem um stick com Repulsão X.
 - A barra moderna de localização (`locator_bar`) é desligada nos mundos do servidor, e a bússola não é mais entregue. O brilho dos jogadores também é removido.
+- Os nicknames acima dos jogadores ficam ocultos durante a partida usando uma equipe de scoreboard.
 - Translocação e fogos de artifício ficam desativados por padrão.
 - Capturas exibem mensagem e atualizam contadores em tempo real.
 - BossBar mostra arena, fase e tempo restante.
@@ -114,24 +115,78 @@ arenas:
       fireworks: false
       catch-by-damage: false
       disable-locator-bar: true
+      hide-nametags: true
 ```
 
 `hunters` define a quantidade de procuradores sorteados no início de cada rodada. `hider-hits` define quantos golpes o escondedor aguenta. `rounds` e `round-seconds` controlam a duração da partida. `enabled: false` impede novas entradas na arena. Com `catch-by-damage: false`, o padrão é a captura após os golpes configurados; as outras habilidades permanecem desligadas.
 
-## LuckPerms
+## Integração com NPCs e menus
 
-Para configurar uma arena do zero, fique no local desejado e execute os comandos abaixo. Repita o comando `set` em cada ponto; os nomes `hider` e `hunter` são os spawns dos times.
+O comando que deve ser executado pelo jogador é:
 
 ```text
-/esconde arena criar escola
-/esconde arena set escola lobby
-/esconde arena set escola hider
-/esconde arena set escola hunter
-/esconde arena set escola spectator
-/esconde arena listar
+/esconde entrar principal
 ```
 
-O resultado precisa mostrar `pronta: true`.
+Para deixar o jogador entrar na primeira arena habilitada, também pode usar `/esconde entrar` sem o nome da arena. O jogador precisa ter a permissão `esconde.join`, que já é pública por padrão.
+
+### FancyMenu
+
+O FancyMenu é um mod de menus no cliente. Em um botão, adicione uma Action Script com a ação **Send Chat Message/Command** (`sendmessage`) e use este valor:
+
+```text
+/esconde entrar principal
+```
+
+O FancyMenu enviará o comando como o jogador. Não use `/esconde iniciar`, pois esse comando é administrativo e serve para forçar o início da partida.
+
+### NPC com FancyNpcs
+
+O FancyMenu não cria NPCs. Se o NPC do seu lobby for do plugin FancyNpcs, crie a ação de clique direito executando o comando como jogador:
+
+```text
+/npc action Esconde RIGHT_CLICK add player_command esconde entrar principal
+```
+
+Troque `Esconde` pelo nome real do NPC. A documentação do FancyNpcs usa a ação `player_command` para executar um comando no jogador que clicou.
+
+Se preferir executar sem depender da permissão do jogador, não use `player_command_as_op` neste caso; dê ao grupo padrão a permissão `esconde.join`:
+
+```text
+/lp group default permission set esconde.join true
+```
+
+### DeluxeHub
+
+No DeluxeHub, o comando pode ser colocado nas ações de um item de entrada ou em uma ação de menu. O formato oficial para executar como jogador é `[COMMAND]`:
+
+```yaml
+actions:
+  - "[COMMAND] esconde entrar principal"
+```
+
+Para um item no `plugins/DeluxeHub/config.yml`, um exemplo é:
+
+```yaml
+custom_join_items:
+  enabled: true
+  items:
+    esconde:
+      material: NETHER_STAR
+      amount: 1
+      slot: 4
+      display_name: "&aEsconde-Esconde"
+      lore:
+        - "&7Clique para entrar na partida"
+      actions:
+        - "[COMMAND] esconde entrar principal"
+```
+
+Se você quiser abrir um menu próprio do DeluxeHub, use a ação `[MENU]`; dentro desse menu, o botão que entra na partida deve usar `[COMMAND] esconde entrar principal`. O DeluxeHub também possui `[CONSOLE]`, mas não use `[CONSOLE] esconde entrar`, porque o comando precisa ser executado pelo jogador.
+
+Essas integrações apenas colocam o jogador na fila. A partida começa automaticamente quando a arena atinge `min-players` e termina a contagem configurada.
+
+## LuckPerms
 
 O plugin já declara as permissões no `plugin.yml`. Para liberar participação para todos e administração para um grupo `staff`:
 

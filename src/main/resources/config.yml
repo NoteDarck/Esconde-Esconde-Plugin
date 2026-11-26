@@ -22,6 +22,7 @@ arenas:
       catch-by-damage: false
       # Remove a barra moderna que revela a localização dos jogadores.
       disable-locator-bar: true
+      hide-nametags: true
     lobby: null
     hider-spawn: null
     hunter-spawn: null

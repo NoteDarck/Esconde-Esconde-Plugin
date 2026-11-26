@@ -17,7 +17,7 @@ import java.util.Map;
 
 public final class EscondeEscondePlugin extends JavaPlugin implements Listener {
     private ArenaManager arenas; private GameManager games;
-    @Override public void onEnable(){saveDefaultConfig(); disableLocatorBars(); arenas=new ArenaManager(this);games=new GameManager(this);EscondeCommand c=new EscondeCommand(this);getCommand("esconde").setExecutor(c);getCommand("esconde").setTabCompleter(c);getServer().getPluginManager().registerEvents(this,this);getLogger().info("Esconde-Esconde 1.2.3 ativado: sem rastreamento, com armas especiais e hits múltiplos.");}
+    @Override public void onEnable(){saveDefaultConfig(); disableLocatorBars(); arenas=new ArenaManager(this);games=new GameManager(this);EscondeCommand c=new EscondeCommand(this);getCommand("esconde").setExecutor(c);getCommand("esconde").setTabCompleter(c);getServer().getPluginManager().registerEvents(this,this);getLogger().info("Esconde-Esconde 1.2.4 ativado: sem rastreamento, com armas especiais e hits múltiplos.");}
     private void disableLocatorBars(){ for(World world : getServer().getWorlds()) world.setGameRule(GameRule.LOCATOR_BAR, false); }
     public ArenaManager arenas(){return arenas;} public GameManager games(){return games;}
     public void reloadAll(){reloadConfig();disableLocatorBars();arenas.load();games.reload();}

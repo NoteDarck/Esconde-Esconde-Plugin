@@ -27,6 +27,7 @@ public final class ArenaDefinition {
     public boolean fireworks() { return config.getBoolean(p("mechanics.fireworks"), false); }
     public boolean catchByDamage() { return config.getBoolean(p("mechanics.catch-by-damage"), false); }
     public boolean disableLocatorBar() { return config.getBoolean(p("mechanics.disable-locator-bar"), true); }
+    public boolean hideNametags() { return config.getBoolean(p("mechanics.hide-nametags"), true); }
     public Location location(String name) { return read(p(name)); }
     public Location lobby() { return location("lobby"); }
     public Location hiderSpawn() { return location("hider-spawn"); }
