@@ -1,5 +1,5 @@
 name: Esconde-Esconde
-version: 1.2.4
+version: 1.2.5
 main: br.com.notedarck.esconde.EscondeEscondePlugin
 api-version: '26.2'
 author: NoteDarck

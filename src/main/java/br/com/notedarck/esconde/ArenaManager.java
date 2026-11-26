@@ -13,24 +13,38 @@ public final class ArenaManager {
     public void load() {
         migrateDefaults();
         arenas.clear(); ConfigurationSection section = config.getConfigurationSection("arenas");
-        if (section == null || section.getKeys(false).isEmpty()) migrateLegacy();
+        if ((section == null || section.getKeys(false).isEmpty()) && config.isConfigurationSection("arena")) migrateLegacy();
         section = config.getConfigurationSection("arenas");
         if (section != null) for (String id : section.getKeys(false)) arenas.put(id.toLowerCase(Locale.ROOT), new ArenaDefinition(id, config));
     }
     private void migrateDefaults() {
-        if (config.getInt("settings.config-version", 1) >= 2) return;
-        ConfigurationSection section = config.getConfigurationSection("arenas");
-        if (section != null) for (String id : section.getKeys(false)) {
-            String base = "arenas." + id;
-            config.set(base + ".hider-hits", config.getInt(base + ".hider-hits", 5));
-            config.set(base + ".mechanics.translocation", false);
-            config.set(base + ".mechanics.fireworks", false);
-            config.set(base + ".mechanics.catch-by-damage", false);
-            config.set(base + ".mechanics.disable-locator-bar", true);
-            config.set(base + ".mechanics.hide-nametags", true);
+        int version = config.getInt("settings.config-version", 1);
+        if (version < 2) {
+            ConfigurationSection section = config.getConfigurationSection("arenas");
+            if (section != null) for (String id : section.getKeys(false)) {
+                String base = "arenas." + id;
+                config.set(base + ".hider-hits", config.getInt(base + ".hider-hits", 5));
+                config.set(base + ".mechanics.translocation", false);
+                config.set(base + ".mechanics.fireworks", false);
+                config.set(base + ".mechanics.catch-by-damage", false);
+                config.set(base + ".mechanics.disable-locator-bar", true);
+                config.set(base + ".mechanics.hide-nametags", true);
+            }
+            version = 2;
         }
-        config.set("settings.config-version", 2);
-        plugin.saveConfig();
+        if (version < 3) {
+            // Releases antigas criavam uma arena principal vazia. Remova apenas esse preset sem pontos.
+            if (isEmptyArena("principal")) config.set("arenas.principal", null);
+            config.set("settings.config-version", 3);
+            plugin.saveConfig();
+        }
+    }
+    private boolean isEmptyArena(String id) {
+        String base = "arenas." + id + ".";
+        if (!config.isConfigurationSection("arenas." + id)) return false;
+        return config.get(base + "lobby") == null && config.get(base + "hider-spawn") == null
+                && config.get(base + "hunter-spawn") == null && config.get(base + "spectator-spawn") == null
+                && config.get(base + "pos1") == null && config.get(base + "pos2") == null;
     }
     private void migrateLegacy() { config.set("arenas.principal.enabled", true); copy("arena.min-players", "arenas.principal.min-players", 2); copy("arena.max-players", "arenas.principal.max-players", 16); copy("arena.min-hunters", "arenas.principal.hunters", 1); copy("arena.hide-time-seconds", "arenas.principal.preparation-seconds", 30); copy("arena.game-time-seconds", "arenas.principal.round-seconds", 600); copy("arena.end-time-seconds", "arenas.principal.between-rounds-seconds", 8); copyLocation("lobby", "lobby"); copyLocation("hider-spawn", "hider-spawn"); copyLocation("hunter-spawn", "hunter-spawn"); copyLocation("spectator-spawn", "spectator-spawn"); config.set("arenas.principal.rounds", 3); config.set("arenas.principal.hider-hits", 5); config.set("arenas.principal.mechanics.translocation", false); config.set("arenas.principal.mechanics.fireworks", false); config.set("arenas.principal.mechanics.catch-by-damage", false); config.set("arenas.principal.mechanics.disable-locator-bar", true); config.set("arenas.principal.mechanics.hide-nametags", true); plugin.saveConfig(); }
     private void copy(String from, String to, Object fallback) { config.set(to, config.get(from, fallback)); }

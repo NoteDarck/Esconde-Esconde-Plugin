@@ -1,34 +1,5 @@
 # Configuração geral; as arenas ficam neste mesmo arquivo para facilitar backup e edição.
-arenas:
-  principal:
-    enabled: true
-    min-players: 2
-    max-players: 16
-    hunters: 1
-    auto-start:
-      enabled: true
-      countdown-seconds: 10
-    rounds: 3
-    preparation-seconds: 30
-    round-seconds: 600
-    between-rounds-seconds: 8
-    # Quantos golpes do procurador o escondedor suporta antes de ser capturado.
-    hider-hits: 5
-    mechanics:
-      # Desativadas por padrão: o escondedor recebe apenas o stick especial.
-      translocation: false
-      fireworks: false
-      # Quando false, a captura acontece depois de hider-hits golpes.
-      catch-by-damage: false
-      # Remove a barra moderna que revela a localização dos jogadores.
-      disable-locator-bar: true
-      hide-nametags: true
-    lobby: null
-    hider-spawn: null
-    hunter-spawn: null
-    spectator-spawn: null
-    pos1: null
-    pos2: null
+arenas: {}
 settings:
   clear-inventory-on-join: true
   restore-players-after-game: true
