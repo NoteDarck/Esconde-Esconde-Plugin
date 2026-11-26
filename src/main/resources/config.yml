@@ -3,10 +3,17 @@ arenas: {}
 settings:
   clear-inventory-on-join: true
   restore-players-after-game: true
+  exit-item:
+    enabled: true
+    material: BARRIER
+    name: '&cSair do Esconde-Esconde'
+    slot: 8
 messages:
   prefix: '&8[&6Esconde&8] &r'
   no-permission: '&cVocê não tem permissão para isso.'
-  no-arena: '&cArena inexistente, desativada ou ainda não configurada.'
+  no-arena: '&cNenhuma arena habilitada e pronta foi encontrada.'
+  arena-not-ready: '&cA arena &f%arena% &cainda não está pronta. Falta configurar: &f%missing%&c.'
+  arena-busy: '&eNão foi possível entrar na arena &f%arena%&e. Ela está cheia ou em partida.'
   joined: '&aVocê entrou na arena &f%arena%&a. Jogadores: &f%players%'
   left: '&eVocê saiu da arena &f%arena%&e.'
   starting: '&eA arena &f%arena% &einicia em &f%time%s&e.'

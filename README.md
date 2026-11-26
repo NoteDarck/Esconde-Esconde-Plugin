@@ -2,7 +2,7 @@
 
 Minigame de Esconde-Esconde para **Paper 26.2**, inspirado no formato clássico do TazerCraft: um ou mais procuradores são sorteados, os escondedores ganham tempo para encontrar um esconderijo, e cada captura transforma o jogador em procurador.
 
-A versão 1.2.5 mantém o scoreboard, arenas, rodadas e auto-start, mas remove o rastreamento moderno de jogadores e desativa as habilidades extras por padrão. O combate agora usa armas especiais e vários golpes antes da captura.
+A versão 1.2.6 mantém o scoreboard, arenas, rodadas e auto-start, mas remove o rastreamento moderno de jogadores e desativa as habilidades extras por padrão. O combate agora usa armas especiais e vários golpes antes da captura.
 
 ## Requisitos
 
@@ -12,7 +12,7 @@ A versão 1.2.5 mantém o scoreboard, arenas, rodadas e auto-start, mas remove o
 
 ## Instalação
 
-Copie `release/Esconde-Esconde-1.2.5-paper-26.2.jar` para `plugins/` e inicie o servidor. A configuração fica em `plugins/Esconde-Esconde/config.yml`.
+Copie `release/Esconde-Esconde-1.2.6-paper-26.2.jar` para `plugins/` e inicie o servidor. A configuração fica em `plugins/Esconde-Esconde/config.yml`.
 
 ## Cadastrando uma arena
 
@@ -24,11 +24,12 @@ Nenhuma arena é criada automaticamente. Para criar uma arena, use o nome que qu
 /esconde arena set escola hider
 /esconde arena set escola hunter
 /esconde arena set escola spectator
+/esconde arena set escola exit
 /esconde arena set escola pos1
 /esconde arena set escola pos2
 ```
 
-Os quatro pontos obrigatórios são `lobby`, `hider`, `hunter` e `spectator`. Sem os quatro, a arena não fica pronta e ninguém consegue entrar.
+Os quatro pontos obrigatórios são `lobby`, `hider`, `hunter` e `spectator`. O ponto `exit` é opcional e define para onde o jogador volta ao clicar no item de saída. Sem os quatro, a arena não fica pronta e ninguém consegue entrar.
 
 `pos1` e `pos2` são opcionais quando a translocação está desligada. Eles delimitam a região usada para impedir que escondedores saiam do mapa e para sortear o destino da translocação. O mundo precisa estar carregado antes de configurar os pontos.
 
@@ -119,6 +120,16 @@ arenas:
 ```
 
 `hunters` define a quantidade de procuradores sorteados no início de cada rodada. `hider-hits` define quantos golpes o escondedor aguenta. `rounds` e `round-seconds` controlam a duração da partida. `enabled: false` impede novas entradas na arena. Com `catch-by-damage: false`, o padrão é a captura após os golpes configurados; as outras habilidades permanecem desligadas.
+
+## Item para sair e ponto de retorno
+
+Ao entrar na fila, o jogador recebe um item de barreira no slot 8. Ao clicar nele, ele sai da arena e é enviado ao ponto `exit` configurado. Para definir esse ponto, fique no local desejado e use:
+
+```text
+/esconde arena set mario exit
+```
+
+Se `exit` não for configurado, o jogador volta para o `lobby` da própria arena. O item pode ser alterado em `settings.exit-item` ou desativado com `enabled: false`.
 
 ## Integração com NPCs e menus
 
@@ -214,7 +225,7 @@ Para remover uma permissão:
 
 - **Arena não aparece como pronta:** configure os quatro pontos obrigatórios: `lobby`, `hider`, `hunter` e `spectator`.
 - **Translocação não funciona (quando você a habilitou):** configure `pos1` e `pos2`, habilite `mechanics.translocation` e verifique se a região está no mesmo mundo dos spawns.
-- **Jogador não consegue entrar:** confirme se ele não está em outra arena e se a partida ainda está em `WAITING`.
+- **Jogador não consegue entrar:** confirme se ele não está em outra arena e se a partida ainda está em `WAITING`. Ao usar `/esconde entrar mario`, o plugin informa quais pontos faltam; configure `lobby`, `hider`, `hunter` e `spectator` e confira `pronta: true`.
 - **O plugin não carrega:** Paper 26.2 requer Java 25 ou superior; confira com `java -version`.
 - **Configuração antiga:** a primeira inicialização migra a arena antiga para `arenas.principal` automaticamente.
 

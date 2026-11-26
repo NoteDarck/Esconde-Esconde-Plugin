@@ -5,6 +5,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import java.util.List;
 
 public final class ArenaDefinition {
     private final String id;
@@ -33,9 +34,19 @@ public final class ArenaDefinition {
     public Location hiderSpawn() { return location("hider-spawn"); }
     public Location hunterSpawn() { return location("hunter-spawn"); }
     public Location spectatorSpawn() { return location("spectator-spawn"); }
+    public Location exitLocation() { return location("exit"); }
     public Location pos1() { return location("pos1"); }
     public Location pos2() { return location("pos2"); }
-    public boolean ready() { return enabled() && lobby() != null && hiderSpawn() != null && hunterSpawn() != null && spectatorSpawn() != null; }
+    public boolean ready() { return enabled() && missingPoints().isEmpty(); }
+    public List<String> missingPoints() {
+        List<String> missing = new java.util.ArrayList<>();
+        if (!enabled()) missing.add("arena desabilitada");
+        if (lobby() == null) missing.add("lobby");
+        if (hiderSpawn() == null) missing.add("hider");
+        if (hunterSpawn() == null) missing.add("hunter");
+        if (spectatorSpawn() == null) missing.add("spectator");
+        return missing;
+    }
     public void setLocation(String name, Location location) { write(p(name), location); }
     private Location read(String path) { ConfigurationSection s = config.getConfigurationSection(path); if (s == null) return null; String worldName = s.getString("world"); World world = worldName == null ? null : Bukkit.getWorld(worldName); if (world == null) return null; return new Location(world, s.getDouble("x"), s.getDouble("y"), s.getDouble("z"), (float)s.getDouble("yaw"), (float)s.getDouble("pitch")); }
     private void write(String path, Location l) { config.set(path + ".world", l.getWorld().getName()); config.set(path + ".x", l.getX()); config.set(path + ".y", l.getY()); config.set(path + ".z", l.getZ()); config.set(path + ".yaw", l.getYaw()); config.set(path + ".pitch", l.getPitch()); }

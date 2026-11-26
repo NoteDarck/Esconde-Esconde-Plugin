@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>br.com.notedarck</groupId>
     <artifactId>esconde-esconde</artifactId>
-    <version>1.2.5</version>
+    <version>1.2.6</version>
     <name>Esconde-Esconde</name>
     <description>Minigame de esconde-esconde para Paper</description>
     <properties>
@@ -25,7 +25,7 @@
         </dependency>
     </dependencies>
     <build>
-        <finalName>Esconde-Esconde-1.2.5-paper-26.2</finalName>
+        <finalName>Esconde-Esconde-1.2.6-paper-26.2</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
