@@ -2,7 +2,7 @@
 
 Minigame de Esconde-Esconde para **Paper 26.2**, inspirado no formato clássico do TazerCraft: um ou mais procuradores são sorteados, os escondedores ganham tempo para encontrar um esconderijo, e cada captura transforma o jogador em procurador.
 
-A versão 1.2.2 mantém o scoreboard, arenas, rodadas e auto-start, mas remove o rastreamento moderno de jogadores e desativa as habilidades extras por padrão. O combate agora usa armas especiais e vários golpes antes da captura.
+A versão 1.2.3 mantém o scoreboard, arenas, rodadas e auto-start, mas remove o rastreamento moderno de jogadores e desativa as habilidades extras por padrão. O combate agora usa armas especiais e vários golpes antes da captura.
 
 ## Requisitos
 
@@ -12,7 +12,7 @@ A versão 1.2.2 mantém o scoreboard, arenas, rodadas e auto-start, mas remove o
 
 ## Instalação
 
-Copie `release/Esconde-Esconde-1.2.2-paper-26.2.jar` para `plugins/` e inicie o servidor. A configuração fica em `plugins/Esconde-Esconde/config.yml`.
+Copie `release/Esconde-Esconde-1.2.3-paper-26.2.jar` para `plugins/` e inicie o servidor. A configuração fica em `plugins/Esconde-Esconde/config.yml`.
 
 ## Cadastrando uma arena
 
@@ -28,7 +28,9 @@ A arena `principal` é criada automaticamente. Para criar outra arena:
 /esconde arena set escola pos2
 ```
 
-`pos1` e `pos2` delimitam a região usada para impedir que escondedores saiam do mapa e para sortear o destino da translocação. O mundo precisa estar carregado antes de configurar os pontos.
+Os quatro pontos obrigatórios são `lobby`, `hider`, `hunter` e `spectator`. Sem os quatro, a arena não fica pronta e ninguém consegue entrar.
+
+`pos1` e `pos2` são opcionais quando a translocação está desligada. Eles delimitam a região usada para impedir que escondedores saiam do mapa e para sortear o destino da translocação. O mundo precisa estar carregado antes de configurar os pontos.
 
 Confira uma arena com:
 
@@ -55,13 +57,14 @@ O comando `/esconde iniciar <arena>` continua disponível para administradores, 
 
 1. Os jogadores entram em uma arena em estado `WAITING`.
 2. O administrador inicia a contagem `STARTING`.
-3. Em cada rodada acontece o `ROLE_SELECTION`; por padrão, um procurador é sorteado.
-4. Os escondedores recebem 30 segundos de preparação e os procuradores ficam cegos e presos ao spawn.
-5. Em `HUNTING`, os procuradores são liberados e têm dez minutos para encontrar os escondedores.
-6. Cada escondedor suporta cinco golpes por padrão. Os primeiros golpes são bloqueados pelo plugin e mostram a resistência restante; somente o golpe final o transforma em procurador. A captura por dano instantâneo pode ser reativada na configuração.
-7. A partida tem três rodadas por padrão. O placar de rodadas é mostrado na scoreboard.
-8. Os escondedores vencem uma rodada se pelo menos um sobreviver ao tempo; os procuradores vencem se capturarem todos.
-9. Ao fim das rodadas, todos são restaurados ao inventário, gamemode e localização originais.
+3. Confira se a arena está pronta com `/esconde arena listar` e se aparece `pronta: true`.
+4. Em cada rodada acontece o `ROLE_SELECTION`; por padrão, um procurador é sorteado.
+5. Os escondedores recebem 30 segundos de preparação e os procuradores ficam cegos e presos ao spawn.
+6. Em `HUNTING`, os procuradores são liberados e têm dez minutos para encontrar os escondedores.
+7. Cada escondedor suporta cinco golpes por padrão. Cada golpe reduz a vida real do jogador e mostra os corações restantes; somente o golpe final o transforma em procurador. A regeneração é bloqueada durante a partida para que a vida represente corretamente os golpes restantes. A captura por dano instantâneo pode ser reativada na configuração.
+8. A partida tem três rodadas por padrão. O placar de rodadas é mostrado na scoreboard.
+9. Os escondedores vencem uma rodada se pelo menos um sobreviver ao tempo; os procuradores vencem se capturarem todos.
+10. Ao fim das rodadas, todos são restaurados ao inventário, gamemode e localização originais.
 
 ## Mecânicas inspiradas no TazerCraft
 
@@ -116,6 +119,19 @@ arenas:
 `hunters` define a quantidade de procuradores sorteados no início de cada rodada. `hider-hits` define quantos golpes o escondedor aguenta. `rounds` e `round-seconds` controlam a duração da partida. `enabled: false` impede novas entradas na arena. Com `catch-by-damage: false`, o padrão é a captura após os golpes configurados; as outras habilidades permanecem desligadas.
 
 ## LuckPerms
+
+Para configurar uma arena do zero, fique no local desejado e execute os comandos abaixo. Repita o comando `set` em cada ponto; os nomes `hider` e `hunter` são os spawns dos times.
+
+```text
+/esconde arena criar escola
+/esconde arena set escola lobby
+/esconde arena set escola hider
+/esconde arena set escola hunter
+/esconde arena set escola spectator
+/esconde arena listar
+```
+
+O resultado precisa mostrar `pronta: true`.
 
 O plugin já declara as permissões no `plugin.yml`. Para liberar participação para todos e administração para um grupo `staff`:
 

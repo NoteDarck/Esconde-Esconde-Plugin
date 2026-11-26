@@ -53,12 +53,17 @@ public final class ArenaGame {
     public void onHunterHit(Player hunter, Player hider) {
         if (state != State.HUNTING || role(hunter.getUniqueId()) != Role.HUNTER || role(hider.getUniqueId()) != Role.HIDER) return;
         if (arena.catchByDamage()) { catchPlayer(hunter, hider); return; }
+        int totalHits = arena.hiderHits();
         int remainingHits = hiderHits.merge(hider.getUniqueId(), -1, Integer::sum);
+        double visibleHealth = hider.getMaxHealth() * Math.max(0, remainingHits) / (double) totalHits;
         if (remainingHits > 0) {
-            hider.sendActionBar("§cVocê foi atingido! §fResistência restante: §e" + remainingHits + " golpes");
-            hunter.sendActionBar("§eAcerto! §fAinda faltam §c" + remainingHits + " golpes");
+            hider.setHealth(Math.max(1.0, Math.min(hider.getMaxHealth(), visibleHealth)));
+            hider.sendActionBar("§cVocê foi atingido! §fVida restante: §e" + Math.ceil(visibleHealth / 2.0) + "❤ §7(" + remainingHits + " golpes)");
+            hunter.sendActionBar("§eAcerto! §fO escondedor ainda aguenta §c" + remainingHits + " golpes");
             return;
         }
+        // O golpe final esvazia a resistência e transforma o escondedor sem abrir uma tela de morte.
+        hider.setHealth(1.0);
         catchPlayer(hunter, hider);
     }
     public void catchPlayer(Player hunter, Player hider) { if (state != State.HUNTING || role(hunter.getUniqueId()) != Role.HUNTER || role(hider.getUniqueId()) != Role.HIDER) return; hiderHits.remove(hider.getUniqueId()); roles.put(hider.getUniqueId(), Role.HUNTER); prepare(hider, Role.HUNTER); hider.teleport(arena.hunterSpawn()); firework(hider, Color.RED); plugin.broadcast(plugin.message("caught", Map.of("player", hider.getName()))); if (hiders() == 0) endRound(true); }
@@ -77,7 +82,7 @@ public final class ArenaGame {
     private String format(int s){return String.format("%02d:%02d",Math.max(0,s)/60,Math.max(0,s)%60);}
     private List<Player> online(){List<Player> out=new ArrayList<>();for(UUID id:players){Player p=Bukkit.getPlayer(id);if(p!=null)out.add(p);}return out;}
     public void onQuit(Player p){players.remove(p.getUniqueId());roles.remove(p.getUniqueId());saved.remove(p.getUniqueId());if(active()&&hiders()==0)endRound(true);}
-    private void restore(Player p){SavedPlayer s=saved.remove(p.getUniqueId());p.setGlowing(false);p.removePotionEffect(PotionEffectType.BLINDNESS);if(s!=null&&plugin.getConfig().getBoolean("settings.restore-players-after-game",true))s.restore(p);else{p.getInventory().clear();p.setGameMode(GameMode.SURVIVAL);}if(arena.lobby()!=null)p.teleport(arena.lobby());}
-    private void cleanup(){if(task!=null){task.cancel();task=null;}for(UUID id:new ArrayList<>(players))plugin.games().clearMembership(id);for(Player p:online())restore(p);for(Player p:online())bossBar.removePlayer(p);players.clear();roles.clear();translocations.clear();hiderHits.clear();state=State.WAITING;round=0;hiderWins=0;hunterWins=0;remaining=0;}
-    private static final class SavedPlayer{final Location location;final ItemStack[] contents,armor;final GameMode mode;final int food,level;final float exp;SavedPlayer(Player p){location=p.getLocation();contents=p.getInventory().getContents().clone();armor=p.getInventory().getArmorContents().clone();mode=p.getGameMode();food=p.getFoodLevel();level=p.getLevel();exp=p.getExp();}void restore(Player p){p.getInventory().setContents(contents);p.getInventory().setArmorContents(armor);p.setGameMode(mode);p.setFoodLevel(food);p.setLevel(level);p.setExp(exp);p.teleport(location);p.setFireTicks(0);}}
+    private void restore(Player p){SavedPlayer s=saved.remove(p.getUniqueId());p.setGlowing(false);p.removePotionEffect(PotionEffectType.BLINDNESS);if(s!=null&&plugin.getConfig().getBoolean("settings.restore-players-after-game",true))s.restore(p);else{p.getInventory().clear();p.setGameMode(GameMode.SURVIVAL);p.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());}if(arena.lobby()!=null)p.teleport(arena.lobby());}
+    private void cleanup(){if(task!=null){task.cancel();task=null;}for(UUID id:new ArrayList<>(players))plugin.games().clearMembership(id);for(Player p:online()){bossBar.removePlayer(p);restore(p);}players.clear();roles.clear();translocations.clear();hiderHits.clear();state=State.WAITING;round=0;hiderWins=0;hunterWins=0;remaining=0;}
+    private static final class SavedPlayer{final Location location;final ItemStack[] contents,armor;final GameMode mode;final Scoreboard scoreboard;final int food,level;final float exp;SavedPlayer(Player p){location=p.getLocation();contents=p.getInventory().getContents().clone();armor=p.getInventory().getArmorContents().clone();mode=p.getGameMode();scoreboard=p.getScoreboard();food=p.getFoodLevel();level=p.getLevel();exp=p.getExp();}void restore(Player p){p.getInventory().setContents(contents);p.getInventory().setArmorContents(armor);p.setGameMode(mode);p.setScoreboard(scoreboard == null ? Bukkit.getScoreboardManager().getMainScoreboard() : scoreboard);p.setFoodLevel(food);p.setLevel(level);p.setExp(exp);p.teleport(location);p.setFireTicks(0);}}
 }
