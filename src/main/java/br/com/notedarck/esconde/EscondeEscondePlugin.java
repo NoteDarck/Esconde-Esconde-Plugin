@@ -92,11 +92,13 @@ public final class EscondeEscondePlugin extends JavaPlugin implements Listener {
         ArenaGame g = games.gameOf(victim.getUniqueId());
         if (g == null || g.state() == ArenaGame.State.WAITING) return;
         if (e instanceof EntityDamageByEntityEvent by && by.getDamager() instanceof Player attacker
-                && g.role(attacker.getUniqueId()) == ArenaGame.Role.HUNTER
-                && g.role(victim.getUniqueId()) == ArenaGame.Role.HIDER
+                && g.role(attacker.getUniqueId()) != null
+                && g.role(victim.getUniqueId()) != null
                 && g.state() == ArenaGame.State.HUNTING) {
-            e.setCancelled(true); g.onHunterHit(attacker, victim); return;
+            // PvP real: o escondedor precisa perder toda a vida para ser capturado.
+            return;
         }
+        // Durante a preparação e contra entidades/danos inválidos, não há dano.
         e.setCancelled(true);
     }
     @EventHandler public void regain(EntityRegainHealthEvent e) {
@@ -104,12 +106,16 @@ public final class EscondeEscondePlugin extends JavaPlugin implements Listener {
     }
     @EventHandler public void death(PlayerDeathEvent e) {
         ArenaGame g = games.gameOf(e.getEntity().getUniqueId());
-        if (g != null && g.role(e.getEntity().getUniqueId()) == ArenaGame.Role.HIDER) { e.setKeepInventory(true); e.getDrops().clear(); e.setCancelled(true); g.onDeath(e.getEntity()); }
+        if (g != null && g.role(e.getEntity().getUniqueId()) == ArenaGame.Role.HIDER) { e.setKeepInventory(true); e.getDrops().clear(); e.setDeathMessage(null); g.onDeath(e.getEntity()); }
+    }
+    @EventHandler public void respawn(PlayerRespawnEvent e) {
+        ArenaGame g = games.gameOf(e.getPlayer().getUniqueId());
+        if (g != null) g.onRespawn(e.getPlayer(), e);
     }
     @EventHandler public void interact(PlayerInteractEvent e) {
         ArenaGame g = games.gameOf(e.getPlayer().getUniqueId());
         String itemId = items.id(e.getItem());
-        if (g != null && itemId != null && !items.actions(itemId).isEmpty()) {
+        if (itemId != null && !items.actions(itemId).isEmpty()) {
             e.setCancelled(true);
             runItemActions(e.getPlayer(), itemId);
             return;

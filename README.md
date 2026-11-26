@@ -2,7 +2,7 @@
 
 Minigame de Esconde-Esconde para **Paper 26.2**, inspirado no formato clássico do TazerCraft: um ou mais procuradores são sorteados, os escondedores ganham tempo para encontrar um esconderijo, e cada captura transforma o jogador em procurador.
 
-A versão 1.3.0 mantém o scoreboard, arenas, rodadas e auto-start, mas remove o rastreamento moderno de jogadores e desativa as habilidades extras por padrão. O combate agora usa armas especiais e vários golpes antes da captura.
+A versão 1.3.1 mantém o scoreboard, arenas, rodadas e auto-start, mas remove o rastreamento moderno de jogadores e desativa as habilidades extras por padrão. O combate agora usa armas especiais e vários golpes antes da captura.
 
 ## Requisitos
 
@@ -12,7 +12,7 @@ A versão 1.3.0 mantém o scoreboard, arenas, rodadas e auto-start, mas remove o
 
 ## Instalação
 
-Copie `release/Esconde-Esconde-1.3.0-paper-26.2.jar` para `plugins/` e inicie o servidor. A configuração fica em `plugins/Esconde-Esconde/config.yml`.
+Copie `release/Esconde-Esconde-1.3.1-paper-26.2.jar` para `plugins/` e inicie o servidor. A configuração fica em `plugins/Esconde-Esconde/config.yml`.
 
 ## Cadastrando uma arena
 
@@ -120,6 +120,18 @@ arenas:
 ```
 
 `hunters` define a quantidade de procuradores sorteados no início de cada rodada. `hider-hits` define quantos golpes o escondedor aguenta. `rounds` e `round-seconds` controlam a duração da partida. `enabled: false` impede novas entradas na arena. Com `catch-by-damage: false`, o padrão é a captura após os golpes configurados; as outras habilidades permanecem desligadas.
+
+## PvP, seleção de arenas e itens após a partida
+
+Durante a fase de caça, o PvP real fica liberado entre os jogadores da arena. O escondedor só é capturado quando sua vida chega a zero; depois do respawn, ele é transformado em procurador e enviado ao `hunter-spawn`. Dano durante a preparação ou fora de um confronto válido continua bloqueado.
+
+`/esconde entrar` agora escolhe automaticamente uma arena habilitada, pronta e que ainda tenha vaga. A preferência é pela arena que já tem mais jogadores; em caso de empate, uma delas é sorteada. Também é possível usar explicitamente:
+
+```text
+/esconde entrar sorteado
+```
+
+Ao terminar a partida, o plugin entrega os itens configurados `random-join` (lã) e `exit` (barreira). A lã executa `esconde entrar sorteado` e leva o jogador para outra partida disponível. A barreira executa as ações configuradas no `items.yml`, normalmente `[COMMAND] spawn`, para sair para o lobby do servidor.
 
 ## Configuração dos itens (`items.yml`)
 

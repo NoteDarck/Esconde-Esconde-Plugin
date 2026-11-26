@@ -6,6 +6,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.configuration.Configuration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -34,6 +35,19 @@ public final class ItemManager {
         File file = new File(plugin.getDataFolder(), "items.yml");
         if (!file.exists()) plugin.saveResource("items.yml", false);
         config = YamlConfiguration.loadConfiguration(file);
+        FileConfiguration defaults = YamlConfiguration.loadConfiguration(new java.io.InputStreamReader(plugin.getResource("items.yml")));
+        mergeMissing(config, defaults, "items");
+        try { config.save(file); } catch (java.io.IOException ex) { plugin.getLogger().warning("Não foi possível salvar items.yml: " + ex.getMessage()); }
+    }
+
+    private void mergeMissing(FileConfiguration target, FileConfiguration defaults, String path) {
+        ConfigurationSection section = defaults.getConfigurationSection(path);
+        if (section == null) return;
+        for (String key : section.getKeys(false)) {
+            String child = path + "." + key;
+            if (defaults.isConfigurationSection(child)) mergeMissing(target, defaults, child);
+            else if (!target.contains(child)) target.set(child, defaults.get(child));
+        }
     }
 
     public boolean enabled(String id) { return config.getBoolean("items." + id + ".enabled", false); }

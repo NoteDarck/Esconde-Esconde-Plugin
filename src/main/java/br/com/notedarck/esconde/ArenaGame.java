@@ -25,6 +25,7 @@ public final class ArenaGame {
     private final Map<UUID, SavedPlayer> saved = new HashMap<>();
     private final Map<UUID, Integer> translocations = new HashMap<>();
     private final Map<UUID, Integer> hiderHits = new HashMap<>();
+    private final Set<UUID> pendingRespawns = new HashSet<>();
     private final BossBar bossBar;
     private State state = State.WAITING;
     private BukkitTask task;
@@ -72,7 +73,21 @@ public final class ArenaGame {
         catchPlayer(hunter, hider);
     }
     public void catchPlayer(Player hunter, Player hider) { if (state != State.HUNTING || role(hunter.getUniqueId()) != Role.HUNTER || role(hider.getUniqueId()) != Role.HIDER) return; hiderHits.remove(hider.getUniqueId()); roles.put(hider.getUniqueId(), Role.HUNTER); prepare(hider, Role.HUNTER); hider.teleport(arena.hunterSpawn()); firework(hider, Color.RED); plugin.broadcast(plugin.message("caught", Map.of("player", hider.getName()))); if (hiders() == 0) endRound(true); }
-    public void onDeath(Player hider) { if (state != State.HUNTING || role(hider.getUniqueId()) != Role.HIDER) return; hiderHits.remove(hider.getUniqueId()); roles.put(hider.getUniqueId(), Role.HUNTER); prepare(hider, Role.HUNTER); hider.teleport(arena.hunterSpawn()); plugin.broadcast(plugin.message("caught", Map.of("player", hider.getName()))); if (hiders() == 0) endRound(true); }
+    public void onDeath(Player hider) {
+        if (state != State.HUNTING || role(hider.getUniqueId()) != Role.HIDER) return;
+        hiderHits.remove(hider.getUniqueId()); roles.put(hider.getUniqueId(), Role.HUNTER); pendingRespawns.add(hider.getUniqueId());
+    }
+    public void onRespawn(Player player, org.bukkit.event.player.PlayerRespawnEvent event) {
+        if (!pendingRespawns.remove(player.getUniqueId())) return;
+        if (arena.hunterSpawn() != null) event.setRespawnLocation(arena.hunterSpawn());
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            if (!players.contains(player.getUniqueId())) return;
+            prepare(player, Role.HUNTER); returnToHunter(player); firework(player, Color.RED);
+            plugin.broadcast(plugin.message("caught", Map.of("player", player.getName())));
+            if (hiders() == 0) endRound(true);
+        });
+    }
+    private void returnToHunter(Player p) { if (arena.hunterSpawn() != null) p.teleport(arena.hunterSpawn()); }
     private void endRound(boolean huntersWon) { if (state == State.ROUND_ENDING || state == State.GAME_ENDING || state == State.WAITING) return; if (huntersWon) hunterWins++; else hiderWins++; state = round >= arena.rounds() ? State.GAME_ENDING : State.ROUND_ENDING; remaining = round >= arena.rounds() ? 8 : arena.betweenRoundsSeconds(); plugin.broadcast(plugin.message(huntersWon ? "hunters-win" : "hiders-win", Map.of("round", String.valueOf(round)))); for (Player p: online()) p.sendTitle(huntersWon ? "§cPROCURADORES VENCERAM" : "§aESCONDEDORES VENCERAM", "§fPlacar " + hunterWins + " x " + hiderWins, 5, 45, 8); if (state == State.ROUND_ENDING) plugin.broadcast(plugin.message("next-round", Map.of("time", String.valueOf(remaining)))); else { boolean hidersWon = hiderWins >= hunterWins; plugin.broadcast(plugin.message(hidersWon ? "game-win-hiders" : "game-win-hunters", Map.of())); } }
     private void prepare(Player p, Role role) {
         p.getInventory().clear(); p.setGameMode(GameMode.ADVENTURE); p.setHealth(p.getMaxHealth()); p.setFoodLevel(20); p.setFireTicks(0);
@@ -103,7 +118,7 @@ public final class ArenaGame {
     private void firework(Player p, Color color){if(!arena.fireworks()||p.getWorld()==null)return;Firework f=p.getWorld().spawn(p.getLocation(),Firework.class);FireworkMeta m=f.getFireworkMeta();m.addEffect(FireworkEffect.builder().withColor(color).with(FireworkEffect.Type.BALL_LARGE).flicker(true).trail(true).build());m.setPower(0);f.setFireworkMeta(m);}
     public boolean translocate(Player p){ if(state != State.HIDING && state != State.HUNTING || role(p.getUniqueId()) != Role.HIDER || !arena.translocation() || translocations.getOrDefault(p.getUniqueId(),0) >= 1) return false; Location a=arena.pos1(),b=arena.pos2(); if(a==null||b==null) return false; double x=Math.min(a.getX(),b.getX())+1+random.nextDouble()*Math.max(1,Math.abs(a.getX()-b.getX())-2); double z=Math.min(a.getZ(),b.getZ())+1+random.nextDouble()*Math.max(1,Math.abs(a.getZ()-b.getZ())-2); Location target=new Location(a.getWorld(),x,a.getY()+1,z,p.getLocation().getYaw(),p.getLocation().getPitch()); p.teleport(target); translocations.put(p.getUniqueId(),1); removeConfiguredItem(p, "hider-teleport"); p.sendTitle("§dTRANSLOCAÇÃO","§fVocê mudou de esconderijo",2,25,5); firework(p,Color.FUCHSIA); return true; }
     private void updateUi(){ double progress=remaining<=0?0:Math.min(1.0,remaining/(double)Math.max(1, state==State.HIDING?arena.preparationSeconds():arena.roundSeconds())); bossBar.setProgress(progress); bossBar.setTitle("§6"+arena.id()+" §8| §f"+stateName()+" §8| §e"+format(remaining)); for(Player p:online()){if(!bossBar.getPlayers().contains(p))bossBar.addPlayer(p);p.sendActionBar("§e"+format(remaining)+" §8| §aEscondidos: §f"+hiders()+" §8| §cProcuradores: §f"+hunters());ScoreboardManager sm=Bukkit.getScoreboardManager();if(sm==null)continue;Scoreboard board=sm.getNewScoreboard();
-        if (arena.hideNametags()) { Team team = board.registerNewTeam("esconde_names"); team.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.NEVER); for (Player target : online()) team.addEntry(target.getName()); }
+        if (arena.hideNametags()) { Team team = board.registerNewTeam("esconde_names"); team.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.NEVER); team.setNameTagVisibility(NameTagVisibility.NEVER); for (Player target : online()) team.addEntry(target.getName()); }
         Objective o=board.registerNewObjective("esconde","dummy","§6§l"+arena.id().toUpperCase());o.setDisplaySlot(DisplaySlot.SIDEBAR);int n=8;o.getScore("§7----------------").setScore(n--);o.getScore("§fRodada: §e"+round+"/"+arena.rounds()).setScore(n--);o.getScore("§fTempo: §e"+format(remaining)).setScore(n--);o.getScore("§cProcuradores: §f"+hunters()).setScore(n--);o.getScore("§aEscondidos: §f"+hiders()).setScore(n--);o.getScore("§7Placar: §f"+hunterWins+" x "+hiderWins).setScore(n--);o.getScore("§7----------------").setScore(n--);p.setScoreboard(board);}}
     private String stateName(){return switch(state){case WAITING->"Aguardando";case STARTING->"Iniciando";case ROLE_SELECTION->"Sorteio";case HIDING->"Escondendo";case HUNTING->"Procurando";case ROUND_ENDING->"Próxima rodada";case GAME_ENDING->"Finalizando";};}
     private String format(int s){return String.format("%02d:%02d",Math.max(0,s)/60,Math.max(0,s)%60);}
@@ -121,7 +136,7 @@ public final class ArenaGame {
     public void onQuit(Player p){
         UUID id = p.getUniqueId();
         if (!players.remove(id)) return;
-        roles.remove(id); translocations.remove(id); hiderHits.remove(id); saved.remove(id);
+        roles.remove(id); translocations.remove(id); hiderHits.remove(id); pendingRespawns.remove(id); saved.remove(id);
         if (state == State.STARTING && players.size() < arena.minPlayers()) {
             state = State.WAITING;
             if (task != null) { task.cancel(); task = null; }
@@ -131,7 +146,7 @@ public final class ArenaGame {
             cleanup();
         }
     }
-    private void restore(Player p){SavedPlayer s=saved.remove(p.getUniqueId());p.setGlowing(false);p.removePotionEffect(PotionEffectType.BLINDNESS);if(s!=null&&plugin.getConfig().getBoolean("settings.restore-players-after-game",true))s.restore(p);else{p.getInventory().clear();p.setGameMode(GameMode.SURVIVAL);p.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());}returnToExit(p);}
-    private void cleanup(){if(task!=null){task.cancel();task=null;}for(UUID id:new ArrayList<>(players))plugin.games().clearMembership(id);for(Player p:online()){bossBar.removePlayer(p);restore(p);}players.clear();roles.clear();translocations.clear();hiderHits.clear();state=State.WAITING;round=0;hiderWins=0;hunterWins=0;remaining=0;}
+    private void restore(Player p){SavedPlayer s=saved.remove(p.getUniqueId());p.setGlowing(false);p.removePotionEffect(PotionEffectType.BLINDNESS);if(s!=null&&plugin.getConfig().getBoolean("settings.restore-players-after-game",true))s.restore(p);else{p.getInventory().clear();p.setGameMode(GameMode.SURVIVAL);p.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());}returnToExit(p); plugin.items().give(p, "random-join"); plugin.items().give(p, "exit");}
+    private void cleanup(){if(task!=null){task.cancel();task=null;}for(UUID id:new ArrayList<>(players))plugin.games().clearMembership(id);for(Player p:online()){bossBar.removePlayer(p);restore(p);}players.clear();roles.clear();translocations.clear();hiderHits.clear();pendingRespawns.clear();state=State.WAITING;round=0;hiderWins=0;hunterWins=0;remaining=0;}
     private static final class SavedPlayer{final Location location;final ItemStack[] contents,armor;final GameMode mode;final Scoreboard scoreboard;final int food,level;final float exp;SavedPlayer(Player p){location=p.getLocation();contents=p.getInventory().getContents().clone();armor=p.getInventory().getArmorContents().clone();mode=p.getGameMode();scoreboard=p.getScoreboard();food=p.getFoodLevel();level=p.getLevel();exp=p.getExp();}void restore(Player p){p.getInventory().setContents(contents);p.getInventory().setArmorContents(armor);p.setGameMode(mode);p.setScoreboard(scoreboard == null ? Bukkit.getScoreboardManager().getMainScoreboard() : scoreboard);p.setFoodLevel(food);p.setLevel(level);p.setExp(exp);p.teleport(location);p.setFireTicks(0);}}
 }
