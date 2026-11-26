@@ -21,8 +21,7 @@ items:
     actions:
       - '[LEAVE]'
       - '[RETURN]'
-      # Para usar o comando do seu plugin de lobby, substitua por:
-      # - '[COMMAND] spawn'
+      - '[COMMAND] spawn'
 
   hunter-weapon:
     enabled: true
