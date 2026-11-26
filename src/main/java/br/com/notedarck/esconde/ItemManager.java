@@ -37,7 +37,16 @@ public final class ItemManager {
         config = YamlConfiguration.loadConfiguration(file);
         FileConfiguration defaults = YamlConfiguration.loadConfiguration(new java.io.InputStreamReader(plugin.getResource("items.yml")));
         mergeMissing(config, defaults, "items");
+        migrateHunterWeapon();
         try { config.save(file); } catch (java.io.IOException ex) { plugin.getLogger().warning("Não foi possível salvar items.yml: " + ex.getMessage()); }
+    }
+
+    private void migrateHunterWeapon() {
+        String base = "items.hunter-weapon.enchantments";
+        if (config.contains(base + ".KNOCKBACK") && !config.contains(base + ".SHARPNESS")) {
+            config.set(base + ".KNOCKBACK", null);
+            config.set(base + ".SHARPNESS", 5);
+        }
     }
 
     private void mergeMissing(FileConfiguration target, FileConfiguration defaults, String path) {
@@ -69,7 +78,7 @@ public final class ItemManager {
             String[] rgb = config.getString(path + ".color", "255,255,255").split(",");
             if (rgb.length == 3) leather.setColor(org.bukkit.Color.fromRGB(Integer.parseInt(rgb[0].trim()), Integer.parseInt(rgb[1].trim()), Integer.parseInt(rgb[2].trim())));
         }
-        String name = config.getString(path + ".name");
+        String name = config.getString(path + ".name", config.getString(path + ".display_name"));
         if (name != null) meta.setDisplayName(color(name));
         List<String> lore = config.getStringList(path + ".lore");
         if (!lore.isEmpty()) meta.setLore(lore.stream().map(this::color).toList());
@@ -78,6 +87,7 @@ public final class ItemManager {
             Enchantment enchantment = Enchantment.getByName(key.toUpperCase(Locale.ROOT));
             if (enchantment != null) meta.addEnchant(enchantment, enchantments.getInt(key, 1), true);
         }
+        if (config.getBoolean(path + ".glow", false)) meta.addEnchant(Enchantment.UNBREAKING, 1, true);
         meta.getPersistentDataContainer().set(idKey, PersistentDataType.STRING, id);
         item.setItemMeta(meta);
         return item;

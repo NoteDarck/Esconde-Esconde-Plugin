@@ -2,7 +2,7 @@
 
 Minigame de Esconde-Esconde para **Paper 26.2**, inspirado no formato clássico do TazerCraft: um ou mais procuradores são sorteados, os escondedores ganham tempo para encontrar um esconderijo, e cada captura transforma o jogador em procurador.
 
-A versão 1.3.2 mantém o scoreboard, arenas, rodadas e auto-start, mas remove o rastreamento moderno de jogadores e desativa as habilidades extras por padrão. O combate agora usa armas especiais e vários golpes antes da captura.
+A versão 1.3.3 mantém o scoreboard, arenas, rodadas e auto-start, mas remove o rastreamento moderno de jogadores e desativa as habilidades extras por padrão. O combate agora usa armas especiais e vários golpes antes da captura.
 
 ## Requisitos
 
@@ -12,7 +12,7 @@ A versão 1.3.2 mantém o scoreboard, arenas, rodadas e auto-start, mas remove o
 
 ## Instalação
 
-Copie `release/Esconde-Esconde-1.3.2-paper-26.2.jar` para `plugins/` e inicie o servidor. A configuração fica em `plugins/Esconde-Esconde/config.yml`.
+Copie `release/Esconde-Esconde-1.3.3-paper-26.2.jar` para `plugins/` e inicie o servidor. A configuração fica em `plugins/Esconde-Esconde/config.yml`.
 
 ## Cadastrando uma arena
 
@@ -277,3 +277,15 @@ Para remover uma permissão:
 ## Limitações conhecidas
 
 A translocação usa uma posição aleatória dentro do retângulo definido por `pos1` e `pos2`; ela não faz análise avançada de blocos para garantir que todo destino tenha dois blocos livres. Para mapas complexos, configure uma região ampla e segura.
+
+O item `maps` usa `FILLED_MAP` e executa `[MENU] mapasEsc`. A ação `[MENU] nome` é convertida pelo plugin em `menu nome` executado pelo jogador; ajuste o comando se o seu plugin de menus usar outra sintaxe. A lã não é mais entregue ao jogador após a partida, evitando que um comando de entrada seja executado enquanto ele ainda está associado a uma arena.
+
+Para ocultar os nicknames, além do scoreboard interno, o plugin executa durante a entrada na partida:
+
+```text
+/team add ocultar
+/team modify ocultar nametagVisibility never
+/team join ocultar <jogador>
+```
+
+Ao sair, o jogador é removido desse time.

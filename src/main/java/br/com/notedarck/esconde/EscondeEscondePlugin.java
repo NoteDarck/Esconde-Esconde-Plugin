@@ -70,6 +70,8 @@ public final class EscondeEscondePlugin extends JavaPlugin implements Listener {
                 if (game != null) game.returnToExit(player);
             } else if (upper.startsWith("[COMMAND] ")) {
                 dispatchPlayerCommand(player, replacePlaceholders(action.substring(10), player, game));
+            } else if (upper.startsWith("[MENU] ")) {
+                dispatchPlayerCommand(player, "menu " + replacePlaceholders(action.substring(7), player, game));
             } else if (upper.startsWith("[CONSOLE] ")) {
                 getServer().dispatchCommand(getServer().getConsoleSender(), replacePlaceholders(action.substring(10), player, game));
             } else if (upper.startsWith("[MESSAGE] ")) {
@@ -84,6 +86,15 @@ public final class EscondeEscondePlugin extends JavaPlugin implements Listener {
     }
     private String replacePlaceholders(String text, Player player, ArenaGame game) {
         return text.replace("%player%", player.getName()).replace("%arena%", game == null ? "" : game.id());
+    }
+
+    public void hideNameTag(Player player) {
+        getServer().dispatchCommand(getServer().getConsoleSender(), "team add ocultar");
+        getServer().dispatchCommand(getServer().getConsoleSender(), "team modify ocultar nametagVisibility never");
+        getServer().dispatchCommand(getServer().getConsoleSender(), "team join ocultar " + player.getName());
+    }
+    public void showNameTag(Player player) {
+        getServer().dispatchCommand(getServer().getConsoleSender(), "team leave " + player.getName());
     }
 
     @EventHandler public void quit(PlayerQuitEvent e) { games.onQuit(e.getPlayer()); }

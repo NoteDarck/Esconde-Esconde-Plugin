@@ -32,7 +32,7 @@ items:
     allow-move: false
     allow-drop: false
     enchantments:
-      KNOCKBACK: 2
+      SHARPNESS: 5
 
   hider-weapon:
     enabled: true
@@ -97,15 +97,19 @@ items:
     material: LEATHER_BOOTS
     color: '85,255,85'
 
-  random-join:
+  maps:
     enabled: true
-    material: WHITE_WOOL
+    material: FILLED_MAP
     amount: 1
-    name: '&aEntrar em outra partida'
+    glow: true
+    display_name: '&aMapas'
+    name: '&aMapas'
     lore:
-      - '&7Clique para entrar na arena sorteada.'
-    slot: 0
+      - '&7Escolha um mapa!'
+      - ''
+      - '&aClique para abrir'
+    slot: 1
     allow-move: true
     allow-drop: true
     actions:
-      - '[COMMAND] esconde entrar sorteado'
+      - '[MENU] mapasEsc'
