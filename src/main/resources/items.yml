@@ -1,0 +1,99 @@
+# Itens do Esconde-Esconde.
+# Ações disponíveis ao clicar:
+#   [COMMAND] comando       executa como o jogador
+#   [CONSOLE] comando       executa pelo console
+#   [MESSAGE] mensagem      envia mensagem ao jogador
+#   [LEAVE]                 remove o jogador da arena
+#   [RETURN]                envia ao ponto exit da arena ou ao lobby
+# Placeholders: %player%, %arena%
+items:
+  exit:
+    enabled: true
+    material: BARRIER
+    amount: 1
+    name: '&cSair do Esconde-Esconde'
+    lore:
+      - '&7Clique para sair da fila ou da partida.'
+    slot: 8
+    allow-move: false
+    allow-drop: false
+    click: ANY
+    actions:
+      - '[LEAVE]'
+      - '[RETURN]'
+      # Para usar o comando do seu plugin de lobby, substitua por:
+      # - '[COMMAND] spawn'
+
+  hunter-weapon:
+    enabled: true
+    material: BLAZE_ROD
+    amount: 1
+    name: '&cVara de Blaze do Procurador'
+    slot: 0
+    allow-move: false
+    allow-drop: false
+    enchantments:
+      KNOCKBACK: 2
+
+  hider-weapon:
+    enabled: true
+    material: STICK
+    amount: 1
+    name: '&aStick do Escondedor'
+    slot: 0
+    allow-move: false
+    allow-drop: false
+    enchantments:
+      KNOCKBACK: 10
+
+  hider-teleport:
+    enabled: true
+    material: ENDER_PEARL
+    amount: 1
+    name: '&dTranslocação &7(1 uso)'
+    slot: 1
+    allow-move: false
+    allow-drop: false
+
+  hider-firework:
+    enabled: true
+    material: FIREWORK_ROCKET
+    amount: 2
+    name: '&cFogos do Escondedor'
+    slot: 2
+    allow-move: false
+    allow-drop: false
+
+  hunter-helmet:
+    enabled: true
+    material: LEATHER_HELMET
+    color: '255,85,85'
+  hunter-chestplate:
+    enabled: true
+    material: LEATHER_CHESTPLATE
+    color: '255,85,85'
+  hunter-leggings:
+    enabled: true
+    material: LEATHER_LEGGINGS
+    color: '255,85,85'
+  hunter-boots:
+    enabled: true
+    material: LEATHER_BOOTS
+    color: '255,85,85'
+
+  hider-helmet:
+    enabled: true
+    material: LEATHER_HELMET
+    color: '85,255,85'
+  hider-chestplate:
+    enabled: true
+    material: LEATHER_CHESTPLATE
+    color: '85,255,85'
+  hider-leggings:
+    enabled: true
+    material: LEATHER_LEGGINGS
+    color: '85,255,85'
+  hider-boots:
+    enabled: true
+    material: LEATHER_BOOTS
+    color: '85,255,85'

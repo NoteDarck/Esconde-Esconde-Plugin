@@ -3,11 +3,6 @@ arenas: {}
 settings:
   clear-inventory-on-join: true
   restore-players-after-game: true
-  exit-item:
-    enabled: true
-    material: BARRIER
-    name: '&cSair do Esconde-Esconde'
-    slot: 8
 messages:
   prefix: '&8[&6Esconde&8] &r'
   no-permission: '&cVocê não tem permissão para isso.'

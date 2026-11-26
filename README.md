@@ -2,7 +2,7 @@
 
 Minigame de Esconde-Esconde para **Paper 26.2**, inspirado no formato clássico do TazerCraft: um ou mais procuradores são sorteados, os escondedores ganham tempo para encontrar um esconderijo, e cada captura transforma o jogador em procurador.
 
-A versão 1.2.6 mantém o scoreboard, arenas, rodadas e auto-start, mas remove o rastreamento moderno de jogadores e desativa as habilidades extras por padrão. O combate agora usa armas especiais e vários golpes antes da captura.
+A versão 1.3.0 mantém o scoreboard, arenas, rodadas e auto-start, mas remove o rastreamento moderno de jogadores e desativa as habilidades extras por padrão. O combate agora usa armas especiais e vários golpes antes da captura.
 
 ## Requisitos
 
@@ -12,7 +12,7 @@ A versão 1.2.6 mantém o scoreboard, arenas, rodadas e auto-start, mas remove o
 
 ## Instalação
 
-Copie `release/Esconde-Esconde-1.2.6-paper-26.2.jar` para `plugins/` e inicie o servidor. A configuração fica em `plugins/Esconde-Esconde/config.yml`.
+Copie `release/Esconde-Esconde-1.3.0-paper-26.2.jar` para `plugins/` e inicie o servidor. A configuração fica em `plugins/Esconde-Esconde/config.yml`.
 
 ## Cadastrando uma arena
 
@@ -120,6 +120,39 @@ arenas:
 ```
 
 `hunters` define a quantidade de procuradores sorteados no início de cada rodada. `hider-hits` define quantos golpes o escondedor aguenta. `rounds` e `round-seconds` controlam a duração da partida. `enabled: false` impede novas entradas na arena. Com `catch-by-damage: false`, o padrão é a captura após os golpes configurados; as outras habilidades permanecem desligadas.
+
+## Configuração dos itens (`items.yml`)
+
+Todos os itens usados pelo minigame ficam em `plugins/Esconde-Esconde/items.yml`. O arquivo é criado automaticamente na primeira inicialização. Ele permite alterar material, quantidade, nome, lore, slot, encantamentos, cor da armadura, movimentação e descarte.
+
+Exemplo do item de saída:
+
+```yaml
+items:
+  exit:
+    enabled: true
+    material: BARRIER
+    amount: 1
+    name: '&cSair do Esconde-Esconde'
+    slot: 8
+    allow-move: false
+    allow-drop: false
+    actions:
+      - '[LEAVE]'
+      - '[COMMAND] spawn'
+```
+
+Ações disponíveis:
+
+- `[COMMAND] spawn`: executa `spawn` como o jogador que clicou, como nos menus do DeluxeHub.
+- `[CONSOLE] essentials:spawn %player%`: executa o comando pelo console.
+- `[MESSAGE] &aVocê saiu!`: envia uma mensagem ao jogador.
+- `[LEAVE]`: remove o jogador da fila ou partida e restaura seu inventário.
+- `[RETURN]`: teleporta para o ponto `exit` da arena ou, se não existir, para o `lobby`.
+
+Os placeholders `%player%` e `%arena%` podem ser usados nas ações. Para alterar outros itens, edite `hunter-weapon`, `hider-weapon`, `hider-teleport`, `hider-firework`, além das peças de armadura. Depois de editar, use `/esconde reload`.
+
+`allow-move: false` impede mover o item pelo inventário durante a arena; `allow-drop: false` impede jogá-lo no chão. Para desativar qualquer item, use `enabled: false`. Itens de combate sem `actions` preservam o comportamento especial do plugin, como a pérola de translocação e os fogos.
 
 ## Item para sair e ponto de retorno
 
