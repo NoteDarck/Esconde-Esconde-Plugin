@@ -2,7 +2,7 @@
 
 Minigame de Esconde-Esconde para **Paper 26.2**, inspirado no formato clássico do TazerCraft: um ou mais procuradores são sorteados, os escondedores ganham tempo para encontrar um esconderijo, e cada captura transforma o jogador em procurador.
 
-A versão 1.3.3 mantém o scoreboard, arenas, rodadas e auto-start, mas remove o rastreamento moderno de jogadores e desativa as habilidades extras por padrão. O combate agora usa armas especiais e vários golpes antes da captura.
+A versão 1.3.4 mantém o scoreboard, arenas, rodadas e auto-start, mas remove o rastreamento moderno de jogadores e desativa as habilidades extras por padrão. O combate agora usa armas especiais e vários golpes antes da captura.
 
 ## Requisitos
 
@@ -12,7 +12,7 @@ A versão 1.3.3 mantém o scoreboard, arenas, rodadas e auto-start, mas remove o
 
 ## Instalação
 
-Copie `release/Esconde-Esconde-1.3.3-paper-26.2-release.jar` para `plugins/` e inicie o servidor. A configuração fica em `plugins/Esconde-Esconde/config.yml`.
+Copie `release/Esconde-Esconde-1.3.4-paper-26.2-release.jar` para `plugins/` e inicie o servidor. A configuração fica em `plugins/Esconde-Esconde/config.yml`.
 
 ## Cadastrando uma arena
 
@@ -324,12 +324,12 @@ A auditoria confirmou que o projeto já possui arenas independentes, persistênc
 
 A entrada de espectadores básica está implementada, mas esta versão ainda não possui a GUI própria de seleção de jogadores, itens configuráveis de espectador, target em primeira pessoa ou scoreboard separado de espectador. Esses pontos devem ser tratados como trabalho futuro, não como funcionalidades concluídas. Também não há persistência em disco de snapshots durante uma queda abrupta do servidor; após uma queda, o estado de um jogador desconectado não pode ser recuperado pelo plugin.
 
-## Release 1.3.3
+## Release 1.3.4
 
-O release compilado está em `release/Esconde-Esconde-1.3.3-paper-26.2-release.jar`. O SHA-256 do arquivo é:
+O release compilado está em `release/Esconde-Esconde-1.3.4-paper-26.2-release.jar`. O SHA-256 do arquivo é:
 
 ```text
-f1ba0c6b9e7d2f681c3ae63cd4215e35cadaaae929940551c0d7303a3f3f2683
+c1e7dcbdea9183fd8de0e5e6b61ebe308ef40025495ba589215e5310bacfd428
 ```
 
 ## Verificação desta revisão
