@@ -6,6 +6,7 @@ import java.util.*;
 
 /** Coordena as sessões globais; todas as alterações de membership ocorrem na thread principal. */
 public final class GameManager {
+    public enum EntryResult { JOINED, SPECTATOR, SAME_ARENA, BUSY, INVALID }
     private final EscondeEscondePlugin plugin;
     private final Map<String, ArenaGame> games = new LinkedHashMap<>();
     private final Map<UUID, String> membership = new HashMap<>();
@@ -66,6 +67,37 @@ public final class GameManager {
             if (game == null || !game.joinSpectator(player)) return false;
             membership.put(uuid, key(game.id()));
             return true;
+        } finally {
+            joining.remove(uuid);
+        }
+    }
+
+    /** Entra na arena solicitada ou troca a sessão atual por ela sem duplicar memberships. */
+    public EntryResult enterOrSwitch(Player player, String id) {
+        if (player == null || id == null) return EntryResult.INVALID;
+        UUID uuid = player.getUniqueId();
+        if (!joining.add(uuid)) return EntryResult.BUSY;
+        try {
+            ArenaGame target = game(id);
+            if (target == null || !target.arenaReady()) return EntryResult.INVALID;
+            String currentId = membership.get(uuid);
+            if (currentId != null && currentId.equalsIgnoreCase(target.id())) return EntryResult.SAME_ARENA;
+
+            boolean spectator = target.active();
+            if (spectator ? !target.canJoinSpectator() : !target.canJoin()) return EntryResult.BUSY;
+
+            if (currentId != null) {
+                ArenaGame current = game(currentId);
+                if (current == null) return EntryResult.BUSY;
+                boolean left = current.contains(uuid) ? current.leave(player) : current.leaveSpectator(player);
+                if (!left) return EntryResult.BUSY;
+                membership.remove(uuid);
+            }
+
+            boolean entered = spectator ? target.joinSpectator(player) : target.join(player);
+            if (!entered) return EntryResult.BUSY;
+            membership.put(uuid, key(target.id()));
+            return spectator ? EntryResult.SPECTATOR : EntryResult.JOINED;
         } finally {
             joining.remove(uuid);
         }

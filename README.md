@@ -2,7 +2,7 @@
 
 Minigame de Esconde-Esconde para **Paper 26.2**, inspirado no formato clássico do TazerCraft: um ou mais procuradores são sorteados, os escondedores ganham tempo para encontrar um esconderijo, e cada captura transforma o jogador em procurador.
 
-A versão 1.3.4 mantém o scoreboard, arenas, rodadas e auto-start, mas remove o rastreamento moderno de jogadores e desativa as habilidades extras por padrão. O combate agora usa armas especiais e vários golpes antes da captura.
+A versão 1.3.5 mantém o scoreboard, arenas, rodadas e auto-start, mas remove o rastreamento moderno de jogadores e desativa as habilidades extras por padrão. O combate agora usa armas especiais e vários golpes antes da captura.
 
 ## Requisitos
 
@@ -12,7 +12,7 @@ A versão 1.3.4 mantém o scoreboard, arenas, rodadas e auto-start, mas remove o
 
 ## Instalação
 
-Copie `release/Esconde-Esconde-1.3.4-paper-26.2-release.jar` para `plugins/` e inicie o servidor. A configuração fica em `plugins/Esconde-Esconde/config.yml`.
+Copie `release/Esconde-Esconde-1.3.5-paper-26.2-release.jar` para `plugins/` e inicie o servidor. A configuração fica em `plugins/Esconde-Esconde/config.yml`.
 
 ## Cadastrando uma arena
 
@@ -324,12 +324,12 @@ A auditoria confirmou que o projeto já possui arenas independentes, persistênc
 
 A entrada de espectadores básica está implementada, mas esta versão ainda não possui a GUI própria de seleção de jogadores, itens configuráveis de espectador, target em primeira pessoa ou scoreboard separado de espectador. Esses pontos devem ser tratados como trabalho futuro, não como funcionalidades concluídas. Também não há persistência em disco de snapshots durante uma queda abrupta do servidor; após uma queda, o estado de um jogador desconectado não pode ser recuperado pelo plugin.
 
-## Release 1.3.4
+## Release 1.3.5
 
-O release compilado está em `release/Esconde-Esconde-1.3.4-paper-26.2-release.jar`. O SHA-256 do arquivo é:
+O release compilado está em `release/Esconde-Esconde-1.3.5-paper-26.2-release.jar`. O SHA-256 do arquivo é:
 
 ```text
-c1e7dcbdea9183fd8de0e5e6b61ebe308ef40025495ba589215e5310bacfd428
+980dd0d6409f959bec65b63f4932ceb6b92c0519b8cdec9ef6f00bcd7b5a7190
 ```
 
 ## Verificação desta revisão
@@ -341,3 +341,18 @@ mvn -DskipTests package
 ```
 
 O build foi executado com `-DskipTests`, pois o repositório original não possui testes automatizados. Os cenários de concorrência e ciclo de vida ainda precisam ser validados em um servidor Paper de teste com jogadores simulados ou um harness Bukkit/Paper.
+
+## Troca de mapa pelo DeluxeHub
+
+O comando `/esconde entrar <arena>` agora permite trocar diretamente de arena. Se o jogador já estiver em outro mapa, a sessão atual é encerrada de forma segura, o estado original é restaurado e o jogador é encaminhado para a arena solicitada. Se a arena solicitada já estiver em andamento, ele entra como espectador conforme as configurações e os limites definidos.
+
+Para arenas que ficam no mesmo servidor Paper, use somente a ação local do DeluxeHub. Não coloque `[PROXY] esconde-esconde` depois do comando, pois essa ação tenta trocar o servidor do proxy e pode interromper o fluxo antes que a arena local seja processada:
+
+```yaml
+actions:
+  - '[CLOSE]'
+  - '[COMMAND] esconde entrar mario'
+  - '[MESSAGE] &aEntrando no mapa Mario...'
+```
+
+Use `[PROXY]` apenas quando `mario`, `dory` e os demais destinos forem servidores separados no BungeeCord ou Velocity. Nesse caso, o plugin Esconde-Esconde precisa estar instalado e configurado no servidor de destino; o comando local não pode entrar em uma arena que existe em outro servidor.

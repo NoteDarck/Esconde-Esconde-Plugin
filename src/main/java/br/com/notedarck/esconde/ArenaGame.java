@@ -35,6 +35,7 @@ public final class ArenaGame {
     private final Random random = new Random();
     ArenaGame(EscondeEscondePlugin plugin, ArenaDefinition arena) { this.plugin = plugin; this.arena = arena; bossBar = Bukkit.createBossBar("§6Esconde-Esconde", BarColor.YELLOW, BarStyle.SOLID); }
     public String id() { return arena.id(); }
+    public boolean arenaReady() { return arena.ready(); }
     public State state() { return state; }
     public int players() { return players.size(); }
     public int spectators() { return spectators.size(); }
