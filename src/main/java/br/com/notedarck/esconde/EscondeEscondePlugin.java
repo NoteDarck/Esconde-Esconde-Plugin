@@ -31,10 +31,15 @@ public final class EscondeEscondePlugin extends JavaPlugin implements Listener {
         arenas = new ArenaManager(this);
         games = new GameManager(this);
         EscondeCommand c = new EscondeCommand(this);
+        if (getCommand("esconde") == null) throw new IllegalStateException("Comando esconde não declarado no plugin.yml");
         getCommand("esconde").setExecutor(c);
         getCommand("esconde").setTabCompleter(c);
         getServer().getPluginManager().registerEvents(this, this);
-        getLogger().info("Esconde-Esconde 1.3.0 ativado com items.yml.");
+        getLogger().info("Esconde-Esconde 1.3.3 ativado com gerenciamento transacional de sessões.");
+    }
+
+    @Override public void onDisable() {
+        if (games != null) games.shutdown();
     }
 
     private void disableLocatorBars() { for (World world : getServer().getWorlds()) world.setGameRule(GameRule.LOCATOR_BAR, false); }
@@ -98,6 +103,7 @@ public final class EscondeEscondePlugin extends JavaPlugin implements Listener {
     }
 
     @EventHandler public void quit(PlayerQuitEvent e) { games.onQuit(e.getPlayer()); }
+    @EventHandler public void kick(PlayerKickEvent e) { games.onQuit(e.getPlayer()); }
     @EventHandler public void damage(EntityDamageEvent e) {
         if (!(e.getEntity() instanceof Player victim)) return;
         ArenaGame g = games.gameOf(victim.getUniqueId());

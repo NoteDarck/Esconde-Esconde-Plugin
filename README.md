@@ -12,7 +12,7 @@ A versão 1.3.3 mantém o scoreboard, arenas, rodadas e auto-start, mas remove o
 
 ## Instalação
 
-Copie `release/Esconde-Esconde-1.3.3-paper-26.2.jar` para `plugins/` e inicie o servidor. A configuração fica em `plugins/Esconde-Esconde/config.yml`.
+Copie `release/Esconde-Esconde-1.3.3-paper-26.2-release.jar` para `plugins/` e inicie o servidor. A configuração fica em `plugins/Esconde-Esconde/config.yml`.
 
 ## Cadastrando uma arena
 
@@ -289,3 +289,55 @@ Para ocultar os nicknames, além do scoreboard interno, o plugin executa durante
 ```
 
 Ao sair, o jogador é removido desse time.
+
+
+## Integridade de sessões e espectadores (1.3.3+)
+
+A entrada normal é validada pelo `GameManager`, que mantém um índice único por UUID e uma reserva curta durante a operação. O jogador é associado à arena somente depois que o snapshot do estado foi salvo e o teleporte para o lobby foi confirmado. Se alguma etapa falhar, a reserva é liberada e o snapshot é restaurado. A seleção automática prioriza arenas prontas com menor ocupação, distribuindo melhor a fila entre arenas simultâneas.
+
+Quando `/esconde entrar <arena>` é executado durante uma partida, a entrada é feita como espectador, desde que `spectator-settings.allow-join-during-game` esteja habilitado, a arena permita espectadores e o limite não tenha sido atingido. Espectadores ficam em uma coleção separada, não contam em `max-players`, não recebem função de escondedor/procurador, entram no modo `SPECTATOR` e são restaurados ao sair:
+
+```yaml
+spectator-settings:
+  enabled: true
+  allow-join-during-game: true
+  allow-join-during-final-round: true
+  allow-join-when-arena-full: true
+  max-spectators-per-arena: 20
+```
+
+É possível limitar uma arena individualmente com:
+
+```yaml
+arenas:
+  escola:
+    spectators:
+      allow-join: true
+      max: 10
+```
+
+A saída `/esconde sair` usa o mesmo fluxo para participantes e espectadores. `PlayerQuitEvent`, `PlayerKickEvent` e a desativação do plugin removem a associação global; o desligamento cancela os timers, remove BossBars e restaura jogadores que ainda estão online. O reload é recusado quando há sessões ativas para evitar perda de snapshots.
+
+## Auditoria e limitações conhecidas
+
+A auditoria confirmou que o projeto já possui arenas independentes, persistência no `config.yml`, migração do schema legado, itens identificados por `PersistentDataContainer` e atualização por arena. Foram corrigidos o risco de associação após a mutação da arena, a seleção que concentrava jogadores na arena mais cheia, a ausência de tratamento para kick/desligamento e a possibilidade de reload apagar o índice de sessões.
+
+A entrada de espectadores básica está implementada, mas esta versão ainda não possui a GUI própria de seleção de jogadores, itens configuráveis de espectador, target em primeira pessoa ou scoreboard separado de espectador. Esses pontos devem ser tratados como trabalho futuro, não como funcionalidades concluídas. Também não há persistência em disco de snapshots durante uma queda abrupta do servidor; após uma queda, o estado de um jogador desconectado não pode ser recuperado pelo plugin.
+
+## Release 1.3.3
+
+O release compilado está em `release/Esconde-Esconde-1.3.3-paper-26.2-release.jar`. O SHA-256 do arquivo é:
+
+```text
+f1ba0c6b9e7d2f681c3ae63cd4215e35cadaaae929940551c0d7303a3f3f2683
+```
+
+## Verificação desta revisão
+
+`git diff --check` foi executado sem erros. O projeto foi compilado com sucesso usando Maven 3.9.11, JDK 25.0.5.1 e Paper API 26.2:
+
+```text
+mvn -DskipTests package
+```
+
+O build foi executado com `-DskipTests`, pois o repositório original não possui testes automatizados. Os cenários de concorrência e ciclo de vida ainda precisam ser validados em um servidor Paper de teste com jogadores simulados ou um harness Bukkit/Paper.

@@ -16,6 +16,8 @@ public final class ArenaDefinition {
     public boolean enabled() { return config.getBoolean(p("enabled"), true); }
     public int minPlayers() { return config.getInt(p("min-players"), 2); }
     public int maxPlayers() { return config.getInt(p("max-players"), 16); }
+    public boolean allowSpectatorJoin() { return config.getBoolean("spectator-settings.allow-join-during-game", true) && config.getBoolean(p("spectators.allow-join"), true); }
+    public int maxSpectators() { return Math.max(0, config.getInt(p("spectators.max"), config.getInt("spectator-settings.max-spectators-per-arena", 20))); }
     public int hunters() { return config.getInt(p("hunters"), 1); }
     public boolean autoStart() { return config.getBoolean(p("auto-start.enabled"), true); }
     public int autoStartSeconds() { return Math.max(1, config.getInt(p("auto-start.countdown-seconds"), 10)); }

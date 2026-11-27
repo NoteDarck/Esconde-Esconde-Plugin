@@ -3,6 +3,12 @@ arenas: {}
 settings:
   clear-inventory-on-join: true
   restore-players-after-game: true
+spectator-settings:
+  enabled: true
+  allow-join-during-game: true
+  allow-join-during-final-round: true
+  allow-join-when-arena-full: true
+  max-spectators-per-arena: 20
 messages:
   prefix: '&8[&6Esconde&8] &r'
   no-permission: '&cVocê não tem permissão para isso.'

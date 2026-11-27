@@ -21,8 +21,10 @@ public final class ArenaGame {
     private final EscondeEscondePlugin plugin;
     private final ArenaDefinition arena;
     private final Set<UUID> players = new LinkedHashSet<>();
+    private final Set<UUID> spectators = new LinkedHashSet<>();
     private final Map<UUID, Role> roles = new HashMap<>();
     private final Map<UUID, SavedPlayer> saved = new HashMap<>();
+    private final Map<UUID, SavedPlayer> savedSpectators = new HashMap<>();
     private final Map<UUID, Integer> translocations = new HashMap<>();
     private final Map<UUID, Integer> hiderHits = new HashMap<>();
     private final Set<UUID> pendingRespawns = new HashSet<>();
@@ -35,14 +37,66 @@ public final class ArenaGame {
     public String id() { return arena.id(); }
     public State state() { return state; }
     public int players() { return players.size(); }
+    public int spectators() { return spectators.size(); }
     public boolean active() { return state != State.WAITING; }
     public boolean contains(UUID id) { return players.contains(id); }
     public Role role(UUID id) { return roles.get(id); }
     public boolean arenaInside(Location location) { return arena.inside(location); }
     public int hiders() { return (int) roles.values().stream().filter(r -> r == Role.HIDER).count(); }
     public int hunters() { return (int) roles.values().stream().filter(r -> r == Role.HUNTER).count(); }
-    public boolean join(Player p) { if (!arena.ready() || !arena.enabled() || (state != State.WAITING && state != State.STARTING) || players.size() >= arena.maxPlayers() || plugin.games().membership(p.getUniqueId()) != null) return false; players.add(p.getUniqueId()); saved.put(p.getUniqueId(), new SavedPlayer(p)); plugin.hideNameTag(p); if (plugin.getConfig().getBoolean("settings.clear-inventory-on-join", true)) p.getInventory().clear(); p.teleport(arena.lobby()); plugin.items().give(p, "exit"); plugin.msg(p, "joined", Map.of("arena", arena.id(), "players", String.valueOf(players.size()))); if (arena.autoStart() && players.size() >= arena.minPlayers()) { state = State.STARTING; remaining = arena.autoStartSeconds(); if (task == null) runTicker(); announceStarting(); } return true; }
+    public boolean canJoin() { return arena.ready() && arena.enabled() && (state == State.WAITING || state == State.STARTING) && players.size() < arena.maxPlayers(); }
+    public boolean canJoinSpectator() { return arena.ready() && arena.enabled() && state != State.WAITING && state != State.STARTING
+            && plugin.getConfig().getBoolean("spectator-settings.enabled", true) && arena.allowSpectatorJoin()
+            && spectators.size() < arena.maxSpectators(); }
+    public boolean join(Player p) {
+        if (p == null || !canJoin() || plugin.games().membership(p.getUniqueId()) != null) return false;
+        UUID id = p.getUniqueId();
+        SavedPlayer snapshot = new SavedPlayer(p);
+        players.add(id);
+        saved.put(id, snapshot);
+        try {
+            plugin.hideNameTag(p);
+            if (plugin.getConfig().getBoolean("settings.clear-inventory-on-join", true)) p.getInventory().clear();
+            if (!p.teleport(arena.lobby())) throw new IllegalStateException("teleporte para o lobby retornou false");
+            plugin.items().give(p, "exit");
+            plugin.msg(p, "joined", Map.of("arena", arena.id(), "players", String.valueOf(players.size())));
+            if (arena.autoStart() && players.size() >= arena.minPlayers()) {
+                state = State.STARTING;
+                remaining = arena.autoStartSeconds();
+                if (task == null) runTicker();
+                announceStarting();
+            }
+            return true;
+        } catch (RuntimeException ex) {
+            plugin.getLogger().warning("Falha transacional ao inserir " + p.getName() + " na arena " + arena.id() + ": " + ex.getMessage());
+            players.remove(id);
+            saved.remove(id);
+            plugin.showNameTag(p);
+            snapshot.restore(p);
+            return false;
+        }
+    }
     public boolean leave(Player p) { if (!players.remove(p.getUniqueId())) return false; plugin.showNameTag(p); roles.remove(p.getUniqueId()); translocations.remove(p.getUniqueId()); hiderHits.remove(p.getUniqueId()); restore(p); plugin.msg(p, "left", Map.of("arena", arena.id())); if (state == State.STARTING && players.size() < arena.minPlayers()) { state = State.WAITING; if (task != null) { task.cancel(); task = null; } } else if (active() && hiders() == 0) endRound(true); return true; }
+    public boolean joinSpectator(Player p) {
+        if (p == null || !canJoinSpectator() || plugin.games().membership(p.getUniqueId()) != null) return false;
+        UUID id = p.getUniqueId();
+        savedSpectators.put(id, new SavedPlayer(p));
+        spectators.add(id);
+        try {
+            p.getInventory().clear();
+            p.setGameMode(GameMode.SPECTATOR);
+            if (!p.teleport(arena.spectatorSpawn())) throw new IllegalStateException("teleporte para o spawn de espectador retornou false");
+            p.sendMessage(plugin.color("§aVocê entrou como espectador da arena §f" + arena.id() + "§a."));
+            return true;
+        } catch (RuntimeException ex) {
+            spectators.remove(id);
+            SavedPlayer savedPlayer = savedSpectators.remove(id);
+            if (savedPlayer != null) savedPlayer.restore(p);
+            plugin.getLogger().warning("Falha ao inserir espectador " + p.getName() + " na arena " + arena.id() + ": " + ex.getMessage());
+            return false;
+        }
+    }
+    public boolean leaveSpectator(Player p) { if (p == null || !spectators.remove(p.getUniqueId())) return false; restoreSpectator(p); return true; }
     public void returnToExit(Player p) {
         Location destination = arena.exitLocation() != null ? arena.exitLocation() : arena.lobby();
         if (destination != null) p.teleport(destination);
@@ -133,8 +187,10 @@ public final class ArenaGame {
         }
     }
     private List<Player> online(){List<Player> out=new ArrayList<>();for(UUID id:players){Player p=Bukkit.getPlayer(id);if(p!=null)out.add(p);}return out;}
+    private List<Player> onlineSpectators(){List<Player> out=new ArrayList<>();for(UUID id:spectators){Player p=Bukkit.getPlayer(id);if(p!=null)out.add(p);}return out;}
     public void onQuit(Player p){
         UUID id = p.getUniqueId();
+        if (spectators.remove(id)) { savedSpectators.remove(id); return; }
         if (!players.remove(id)) return;
         roles.remove(id); translocations.remove(id); hiderHits.remove(id); pendingRespawns.remove(id); saved.remove(id); plugin.showNameTag(p);
         if (state == State.STARTING && players.size() < arena.minPlayers()) {
@@ -146,7 +202,9 @@ public final class ArenaGame {
             cleanup();
         }
     }
-    private void restore(Player p){SavedPlayer s=saved.remove(p.getUniqueId());p.setGlowing(false);p.removePotionEffect(PotionEffectType.BLINDNESS);if(s!=null&&plugin.getConfig().getBoolean("settings.restore-players-after-game",true))s.restore(p);else{p.getInventory().clear();p.setGameMode(GameMode.SURVIVAL);p.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());}returnToExit(p); removeConfiguredItem(p, "random-join"); plugin.items().give(p, "maps"); plugin.items().give(p, "exit");}
-    private void cleanup(){if(task!=null){task.cancel();task=null;}for(UUID id:new ArrayList<>(players))plugin.games().clearMembership(id);for(Player p:online()){bossBar.removePlayer(p);plugin.showNameTag(p);restore(p);}players.clear();roles.clear();translocations.clear();hiderHits.clear();pendingRespawns.clear();state=State.WAITING;round=0;hiderWins=0;hunterWins=0;remaining=0;}
+    private void restore(Player p){if(p==null)return;SavedPlayer s=saved.remove(p.getUniqueId());p.setGlowing(false);p.removePotionEffect(PotionEffectType.BLINDNESS);if(s!=null&&plugin.getConfig().getBoolean("settings.restore-players-after-game",true))s.restore(p);else{p.getInventory().clear();p.setGameMode(GameMode.SURVIVAL);p.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());}returnToExit(p); removeConfiguredItem(p, "random-join"); plugin.items().give(p, "maps"); plugin.items().give(p, "exit");}
+    private void restoreSpectator(Player p){if(p==null)return;SavedPlayer s=savedSpectators.remove(p.getUniqueId());if(s!=null)s.restore(p);else{p.getInventory().clear();p.setGameMode(GameMode.SURVIVAL);}returnToExit(p);}
+    private void cleanup(){if(task!=null){task.cancel();task=null;}for(UUID id:new ArrayList<>(players))plugin.games().clearMembership(id);for(UUID id:new ArrayList<>(spectators))plugin.games().clearMembership(id);for(Player p:online()){bossBar.removePlayer(p);plugin.showNameTag(p);restore(p);}for(Player p:onlineSpectators())restoreSpectator(p);players.clear();spectators.clear();savedSpectators.clear();roles.clear();translocations.clear();hiderHits.clear();pendingRespawns.clear();state=State.WAITING;round=0;hiderWins=0;hunterWins=0;remaining=0;}
+    public void shutdown(){cleanup();bossBar.removeAll();}
     private static final class SavedPlayer{final Location location;final ItemStack[] contents,armor;final GameMode mode;final Scoreboard scoreboard;final int food,level;final float exp;SavedPlayer(Player p){location=p.getLocation();contents=p.getInventory().getContents().clone();armor=p.getInventory().getArmorContents().clone();mode=p.getGameMode();scoreboard=p.getScoreboard();food=p.getFoodLevel();level=p.getLevel();exp=p.getExp();}void restore(Player p){p.getInventory().setContents(contents);p.getInventory().setArmorContents(armor);p.setGameMode(mode);p.setScoreboard(scoreboard == null ? Bukkit.getScoreboardManager().getMainScoreboard() : scoreboard);p.setFoodLevel(food);p.setLevel(level);p.setExp(exp);p.teleport(location);p.setFireTicks(0);}}
 }
