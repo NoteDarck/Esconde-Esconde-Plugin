@@ -128,8 +128,10 @@ public final class EscondeCommand implements CommandExecutor, TabCompleter {
             if (spectatorChoices.isEmpty()) return null;
             return spectatorChoices.get(ThreadLocalRandom.current().nextInt(spectatorChoices.size())).id();
         }
-        int min = choices.stream().mapToInt(d -> plugin.games().game(d.id()).players()).min().orElse(0);
-        List<ArenaDefinition> preferred = choices.stream().filter(d -> plugin.games().game(d.id()).players() == min).toList();
+        List<ArenaDefinition> occupied = choices.stream().filter(d -> plugin.games().game(d.id()).players() > 0).toList();
+        if (!occupied.isEmpty()) choices = occupied;
+        int selectedCount = choices.stream().mapToInt(d -> plugin.games().game(d.id()).players()).max().orElse(0);
+        List<ArenaDefinition> preferred = choices.stream().filter(d -> plugin.games().game(d.id()).players() == selectedCount).toList();
         return preferred.get(ThreadLocalRandom.current().nextInt(preferred.size())).id();
     }
 

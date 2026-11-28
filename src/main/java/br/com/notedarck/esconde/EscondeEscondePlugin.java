@@ -153,6 +153,7 @@ public final class EscondeEscondePlugin extends JavaPlugin implements Listener {
     }
     @EventHandler public void inventoryClick(InventoryClickEvent e) {
         if (!(e.getWhoClicked() instanceof Player p)) return;
+        if (p.getOpenInventory().getTitle().equals("§8Roleta de funções")) { e.setCancelled(true); return; }
         String id = items.id(e.getCurrentItem());
         if (id != null && !items.allowMove(id) && games.gameOf(p.getUniqueId()) != null) e.setCancelled(true);
     }

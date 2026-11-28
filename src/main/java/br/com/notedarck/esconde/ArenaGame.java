@@ -4,6 +4,7 @@ import org.bukkit.*;
 import org.bukkit.boss.*;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -31,6 +32,7 @@ public final class ArenaGame {
     private final BossBar bossBar;
     private State state = State.WAITING;
     private BukkitTask task;
+    private BukkitTask roleRouletteTask;
     private int remaining, round, hiderWins, hunterWins;
     private final Random random = new Random();
     ArenaGame(EscondeEscondePlugin plugin, ArenaDefinition arena) { this.plugin = plugin; this.arena = arena; bossBar = Bukkit.createBossBar("§6Esconde-Esconde", BarColor.YELLOW, BarStyle.SOLID); }
@@ -107,8 +109,18 @@ public final class ArenaGame {
     public void stop() { if (state == State.WAITING) return; plugin.broadcast(plugin.message("stopped", Map.of("arena", arena.id()))); cleanup(); }
     private void announceStarting() { for (Player p : online()) { p.sendTitle("§6" + arena.id(), "§eComeçando em " + remaining + "s", 0, 25, 5); p.sendActionBar("§eA partida inicia em §f" + remaining + "s§e. Novas entradas reiniciam a contagem."); } }
     private void runTicker() { if (task != null) task.cancel(); task = Bukkit.getScheduler().runTaskTimer(plugin, () -> { updateUi(); switch (state) { case STARTING -> { if (remaining <= 0) beginRound(); else { if (remaining <= 5) announceStarting(); remaining--; } } case HIDING -> { if (remaining <= 0) releaseHunters(); else { importantTimeTitle(); remaining--; } } case HUNTING -> { if (remaining <= 0) endRound(false); else remaining--; } case ROUND_ENDING -> { if (remaining <= 0) beginRound(); else remaining--; } case GAME_ENDING -> { if (remaining <= 0) cleanup(); else remaining--; } default -> { } } }, 0L, 20L); }
-    private void beginRound() { state = State.ROLE_SELECTION; round++; roles.clear(); translocations.clear(); hiderHits.clear(); List<UUID> ids = new ArrayList<>(players); ids.removeIf(id -> Bukkit.getPlayer(id) == null); Collections.shuffle(ids, random); int count = Math.min(Math.max(1, arena.hunters()), Math.max(1, ids.size()-1)); for (int i=0;i<ids.size();i++) roles.put(ids.get(i), i < count ? Role.HUNTER : Role.HIDER);
-        for (UUID id : ids) if (roles.get(id) == Role.HIDER) hiderHits.put(id, arena.hiderHits()); for (UUID id : ids) { Player p=Bukkit.getPlayer(id); if(p==null) continue; prepare(p, roles.get(id)); p.teleport(roles.get(id)==Role.HUNTER ? arena.hunterSpawn() : arena.hiderSpawn()); p.sendTitle(roles.get(id)==Role.HUNTER ? "§cPROCURADOR" : "§aESCONDEDOR", roles.get(id)==Role.HUNTER ? "§fAguarde a liberação" : "§fVocê tem tempo para se esconder", 5, 35, 8); } state = State.HIDING; remaining = arena.preparationSeconds(); plugin.broadcast("§eArena §f"+arena.id()+" §e| Rodada §f"+round+"§e/§f"+arena.rounds()+" §einiciada."); }
+    private void beginRound() { state = State.ROLE_SELECTION; round++; roles.clear(); translocations.clear(); hiderHits.clear(); List<UUID> ids = new ArrayList<>(players); ids.removeIf(id -> Bukkit.getPlayer(id) == null); Collections.shuffle(ids, random); int count = Math.min(Math.max(1, arena.hunters()), Math.max(1, ids.size()-1)); for (int i=0;i<ids.size();i++) roles.put(ids.get(i), i < count ? Role.HUNTER : Role.HIDER); for (UUID id : ids) if (roles.get(id) == Role.HIDER) hiderHits.put(id, arena.hiderHits()); startRoleRoulette(ids); }
+
+    private void startRoleRoulette(List<UUID> ids) {
+        for (UUID id : ids) { Player p = Bukkit.getPlayer(id); if (p == null) continue; Inventory inv = Bukkit.createInventory(null, 27, "§8Roleta de funções"); inv.setItem(11, rouletteItem(Material.GREEN_WOOL, "§aESCONDEDOR")); inv.setItem(15, rouletteItem(Material.RED_WOOL, "§cPEGADOR")); inv.setItem(13, rouletteItem(Material.GREEN_WOOL, "§eSorteando...")); p.openInventory(inv); p.sendTitle("§6ROULETA", "§fSua função está sendo sorteada...", 0, 35, 5); }
+        roleRouletteTask = Bukkit.getScheduler().runTaskTimer(plugin, new Runnable() { int ticks; boolean red;
+            @Override public void run() { ticks += 4; red = !red; for (UUID id : ids) { Player p = Bukkit.getPlayer(id); if (p == null) continue; Inventory inv = p.getOpenInventory().getTopInventory(); if (inv.getSize() == 27 && p.getOpenInventory().getTitle().equals("§8Roleta de funções")) inv.setItem(13, rouletteItem(red ? Material.RED_WOOL : Material.GREEN_WOOL, red ? "§cPEGADOR" : "§aESCONDEDOR")); } if (ticks >= 32) { roleRouletteTask.cancel(); roleRouletteTask = null; finishRoleRoulette(ids); } }
+        }, 0L, 4L);
+    }
+
+    private ItemStack rouletteItem(Material material, String name) { ItemStack item = new ItemStack(material); ItemMeta meta = item.getItemMeta(); if (meta != null) { meta.setDisplayName(name); item.setItemMeta(meta); } return item; }
+
+    private void finishRoleRoulette(List<UUID> ids) { for (UUID id : ids) { Player p = Bukkit.getPlayer(id); if (p == null || !players.contains(id)) continue; if (p.getOpenInventory().getTitle().equals("§8Roleta de funções")) p.closeInventory(); Role role = roles.get(id); prepare(p, role); p.teleport(role == Role.HUNTER ? arena.hunterSpawn() : arena.hiderSpawn()); p.sendTitle(role == Role.HUNTER ? "§cPEGADOR" : "§aESCONDEDOR", role == Role.HUNTER ? "§fAguarde a liberação" : "§fVocê tem tempo para se esconder", 5, 35, 8); } state = State.HIDING; remaining = arena.preparationSeconds(); plugin.broadcast("§eArena §f"+arena.id()+" §e| Rodada §f"+round+"§e/§f"+arena.rounds()+" §einiciada."); }
     private void releaseHunters() { state = State.HUNTING; remaining = arena.roundSeconds(); for (Player p: online()) { p.removePotionEffect(PotionEffectType.BLINDNESS); if (role(p.getUniqueId()) == Role.HUNTER) p.sendTitle("§cPROCURADORES LIBERADOS", "§fEncontrem os escondedores!", 5, 35, 8); else p.sendTitle("§aCORRA!", "§fOs procuradores foram liberados", 5, 25, 5); } plugin.broadcast(plugin.message("released", Map.of())); }
     private void importantTimeTitle() { if (remaining == 30 || remaining == 10) for (Player p: online()) p.sendTitle("§e"+remaining+" segundos", "§fContinue escondido", 0, 25, 5); }
     public void onHunterHit(Player hunter, Player hider) {
@@ -205,7 +217,7 @@ public final class ArenaGame {
     }
     private void restore(Player p){if(p==null)return;SavedPlayer s=saved.remove(p.getUniqueId());p.setGlowing(false);p.removePotionEffect(PotionEffectType.BLINDNESS);if(s!=null&&plugin.getConfig().getBoolean("settings.restore-players-after-game",true))s.restore(p);else{p.getInventory().clear();p.setGameMode(GameMode.SURVIVAL);p.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());}returnToExit(p); removeConfiguredItem(p, "random-join"); plugin.items().give(p, "maps"); plugin.items().give(p, "exit");}
     private void restoreSpectator(Player p){if(p==null)return;SavedPlayer s=savedSpectators.remove(p.getUniqueId());if(s!=null)s.restore(p);else{p.getInventory().clear();p.setGameMode(GameMode.SURVIVAL);}returnToExit(p);}
-    private void cleanup(){if(task!=null){task.cancel();task=null;}for(UUID id:new ArrayList<>(players))plugin.games().clearMembership(id);for(UUID id:new ArrayList<>(spectators))plugin.games().clearMembership(id);for(Player p:online()){bossBar.removePlayer(p);plugin.showNameTag(p);restore(p);}for(Player p:onlineSpectators())restoreSpectator(p);players.clear();spectators.clear();savedSpectators.clear();roles.clear();translocations.clear();hiderHits.clear();pendingRespawns.clear();state=State.WAITING;round=0;hiderWins=0;hunterWins=0;remaining=0;}
+    private void cleanup(){if(task!=null){task.cancel();task=null;}if(roleRouletteTask!=null){roleRouletteTask.cancel();roleRouletteTask=null;}for(UUID id:new ArrayList<>(players))plugin.games().clearMembership(id);for(UUID id:new ArrayList<>(spectators))plugin.games().clearMembership(id);for(Player p:online()){bossBar.removePlayer(p);plugin.showNameTag(p);restore(p);}for(Player p:onlineSpectators())restoreSpectator(p);players.clear();spectators.clear();savedSpectators.clear();roles.clear();translocations.clear();hiderHits.clear();pendingRespawns.clear();state=State.WAITING;round=0;hiderWins=0;hunterWins=0;remaining=0;}
     public void shutdown(){cleanup();bossBar.removeAll();}
     private static final class SavedPlayer{final Location location;final ItemStack[] contents,armor;final GameMode mode;final Scoreboard scoreboard;final int food,level;final float exp;SavedPlayer(Player p){location=p.getLocation();contents=p.getInventory().getContents().clone();armor=p.getInventory().getArmorContents().clone();mode=p.getGameMode();scoreboard=p.getScoreboard();food=p.getFoodLevel();level=p.getLevel();exp=p.getExp();}void restore(Player p){p.getInventory().setContents(contents);p.getInventory().setArmorContents(armor);p.setGameMode(mode);p.setScoreboard(scoreboard == null ? Bukkit.getScoreboardManager().getMainScoreboard() : scoreboard);p.setFoodLevel(food);p.setLevel(level);p.setExp(exp);p.teleport(location);p.setFireTicks(0);}}
 }
